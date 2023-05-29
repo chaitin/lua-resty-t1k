@@ -220,11 +220,9 @@ passed
 --- error_log
 lua-resty-t1k: t1k is not enabled
 --- log_level: debug
---- skip_eval
-4: not exists($ENV{INTEGRATION_TEST})
 
 
-=== TEST 7: integration test configuration priority
+=== TEST 6: integration test configuration priority
 --- http_config eval: $::HttpConfig
 --- config
         access_by_lua_block {
@@ -276,7 +274,7 @@ lua-resty-t1k: t1k is not enabled
 6: not exists($ENV{INTEGRATION_TEST})
 
 
-=== TEST 8: integration test blocked extra headers
+=== TEST 7: integration test blocked extra headers
 --- http_config eval: $::HttpConfig
 --- config
        location /t {
@@ -327,7 +325,7 @@ lua-resty-t1k: successfully connected to t1k server 127.0.0.1:18000
 --- log_level: debug
 
 
-=== TEST 9: integration test passed extra headers
+=== TEST 8: integration test passed extra headers
 --- http_config eval: $::HttpConfig
 --- config
        location /t {
@@ -376,7 +374,7 @@ lua-resty-t1k: successfully connected to t1k server 127.0.0.1:18000
 --- log_level: debug
 
 
-=== TEST 10: integration test monitor extra headers
+=== TEST 9: integration test monitor extra headers
 --- http_config eval: $::HttpConfig
 --- config
        location /t {
