@@ -1,18 +1,18 @@
 name: Test
 
-on: [push, pull_request]
+on: [ push, pull_request ]
 
 jobs:
   luacheck:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: leafo/gh-actions-lua@v8
-      with:
-        luaVersion: "luajit-openresty"
-    - uses: leafo/gh-actions-luarocks@v4
-    - run: luarocks install luacheck
-    - run: luacheck lib
+      - uses: actions/checkout@v2
+      - uses: leafo/gh-actions-lua@v8
+        with:
+          luaVersion: "luajit-openresty"
+      - uses: leafo/gh-actions-luarocks@v4
+      - run: luarocks install luacheck
+      - run: luacheck lib
 
   run_tests:
     strategy:
@@ -29,26 +29,28 @@ jobs:
       options: --init
 
     steps:
-    - name: Install deps
-      run: |
-        apk add --no-cache curl perl bash wget git perl-dev libarchive-tools
-        ln -s /usr/bin/bsdtar /usr/bin/tar
+      - name: Install deps
+        run: |
+          apk add --no-cache curl perl bash wget git perl-dev libarchive-tools
+          ln -s /usr/bin/bsdtar /usr/bin/tar
 
-    - name: Install CPAN
-      run: curl -s -L http://xrl.us/cpanm > /bin/cpanm && chmod +x /bin/cpanm
+      - name: Install CPAN
+        run: curl -s -L http://xrl.us/cpanm > /bin/cpanm && chmod +x /bin/cpanm
 
-    - name: Cache
-      uses: actions/cache@v2
-      with:
-        path: |
-          ~/.cpan
-          ~/.cache
-        key: ${{ runner.os }}-${{ matrix.openresty_version }}-cache
+      - name: Cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cpan
+            ~/.cache
+          key: ${{ runner.os }}-${{ matrix.openresty_version }}-cache
 
-    - name: Install Test::Nginx
-      run: cpanm -q -n Test::Nginx
+      - name: Install Test::Nginx
+        run: cpanm -q -n Test::Nginx
 
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Run tests
-      run: /usr/bin/prove -r t/
+      - name: Run tests
+        run: /usr/bin/prove -r t/
+        env:
+          INTEGRATION_TEST: 1
