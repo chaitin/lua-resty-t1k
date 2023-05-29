@@ -12,7 +12,7 @@ jobs:
         luaVersion: "luajit-openresty"
     - uses: leafo/gh-actions-luarocks@v4
     - run: luarocks install luacheck
-    - run: luacheck resty
+    - run: luacheck lib
 
   run_tests:
     strategy:
@@ -51,4 +51,4 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Run tests
-      run: /usr/bin/prove -I. -r t/
+      run: /usr/bin/prove -r t/

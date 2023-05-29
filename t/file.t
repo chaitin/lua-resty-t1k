@@ -1,7 +1,7 @@
 use Test::Nginx::Socket;
 
 our $HttpConfig = <<'_EOC_';
-    lua_package_path "/opt/t1k/lib/?.lua;;";
+    lua_package_path "lib/?.lua;/usr/local/share/lua/5.1/?.lua;;";
 _EOC_
 
 repeat_each(3);
