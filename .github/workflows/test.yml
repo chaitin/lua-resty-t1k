@@ -6,8 +6,8 @@ jobs:
   luacheck:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: leafo/gh-actions-lua@v8
+      - uses: actions/checkout@v3
+      - uses: leafo/gh-actions-lua@v10
         with:
           luaVersion: "luajit-openresty"
       - uses: leafo/gh-actions-luarocks@v4
@@ -22,6 +22,10 @@ jobs:
           - 1.19.9.1
           - 1.21.4.1
 
+    services:
+      detector:
+        image: chaitin/safeline-detector:t1k-ci-latest
+
     runs-on: ubuntu-latest
     container:
       image: openresty/openresty:${{ matrix.openresty_version }}-alpine-fat
@@ -31,14 +35,14 @@ jobs:
     steps:
       - name: Install deps
         run: |
-          apk add --no-cache curl perl bash wget git perl-dev libarchive-tools
+          apk add --no-cache bash bind-tools curl git git-lfs libarchive-tools perl perl-dev wget
           ln -s /usr/bin/bsdtar /usr/bin/tar
 
       - name: Install CPAN
         run: curl -s -L http://xrl.us/cpanm > /bin/cpanm && chmod +x /bin/cpanm
 
       - name: Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/.cpan
@@ -48,9 +52,15 @@ jobs:
       - name: Install Test::Nginx
         run: cpanm -q -n Test::Nginx
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          lfs: true
 
       - name: Run tests
-        run: /usr/bin/prove -r t/
+        run: |
+          DETECTOR_IP=$(dig detector +short)
+          curl -fs -X POST -H "Content-Type: application/octet-stream" --data-binary "@ci/bytecode" "http://${DETECTOR_IP}:8001/update/policy"
+          sed -i "s/detector.ip.addr/${DETECTOR_IP}/g" t/integration.t
+          prove -r t/
         env:
           INTEGRATION_TEST: 1

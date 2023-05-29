@@ -5,7 +5,6 @@ local _M = {
 }
 
 local band = bit.band
-local bor = bit.bor
 local bnot = bit.bnot
 local lshift = bit.lshift
 local rshift = bit.rshift
@@ -30,7 +29,7 @@ function _M.char_to_int_length(l)
 end
 
 function _M.is_mask_first(b)
-    return b == bor(consts.MASK_FIRST, consts.TAG_HEAD)
+    return band(b, consts.MASK_FIRST) == consts.MASK_FIRST
 end
 
 function _M.is_mask_last(b)

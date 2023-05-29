@@ -55,8 +55,10 @@ GET /t
         location /t {
             content_by_lua_block {
                 local utils = require "resty.t1k.utils"
-                ngx.say("0x30 is MASK FIRST: ", utils.is_mask_first(48))
-                ngx.say("0x41 is MASK FIRST: ", utils.is_mask_first(65))
+                ngx.say("0x30 is MASK FIRST: ", utils.is_mask_first(0x30))
+                ngx.say("0x41 is MASK FIRST: ", utils.is_mask_first(0x41))
+                ngx.say("0xc0 is MASK FIRST: ", utils.is_mask_first(0xc0))
+                ngx.say("0xc1 is MASK FIRST: ", utils.is_mask_first(0xc1))
             }
         }
 --- request
@@ -64,6 +66,8 @@ GET /t
 --- response_body
 0x30 is MASK FIRST: false
 0x41 is MASK FIRST: true
+0xc0 is MASK FIRST: true
+0xc1 is MASK FIRST: true
 --- no_error_log
 [error]
 
