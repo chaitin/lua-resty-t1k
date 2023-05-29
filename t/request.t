@@ -302,12 +302,12 @@ lua-resty-t1k: unknown action from t1k server: ~
 --- request
 GET /t
 --- more_headers
-X-Forwarded-For: 1.1.1.1, 2.2.2.2, 2001:db8:3333:4444:5555:6666:7777:18000, 3.3.3.3
+X-Forwarded-For: 1.1.1.1, 2.2.2.2, 2001:db8:3333:4444:5555:6666:7777:8888, 3.3.3.3
 X-Real-IP: 100.100.100.100
 --- response_body
 ngx.var.http_x_real_ip or ngx.var.remote_addr is 100.100.100.100
 ngx.var.http_x_forwarded_for: 2 or ngx.var.remote_addr is 2.2.2.2
-ngx.var.http_x_forwarded_for: -2 or ngx.var.remote_addr is 2001:db8:3333:4444:5555:6666:7777:18000
+ngx.var.http_x_forwarded_for: -2 or ngx.var.remote_addr is 2001:db8:3333:4444:5555:6666:7777:8888
 ngx.var.http_non_existent_header or ngx.var.remote_addr is 127.0.0.1
 --- no_error_log
 [error]
