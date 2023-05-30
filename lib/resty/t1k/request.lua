@@ -293,6 +293,11 @@ function _M.do_request(opts)
         return
     end
 
+    local extra_header = t[consts.TAG_EXTRA_HEADER]
+    if extra_header ~= nil then
+        ngx.ctx.t1k_extra_header = extra_header
+    end
+
     local action = t[consts.TAG_HEAD]
     if action == "." then
         ngx.ctx.t1k_request_passed = 1

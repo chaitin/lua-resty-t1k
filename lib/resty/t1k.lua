@@ -1,4 +1,5 @@
 local consts = require "resty.t1k.constants"
+local filter = require "resty.t1k.filter"
 local log = require "resty.t1k.log"
 local request = require "resty.t1k.request"
 local utils = require "resty.t1k.utils"
@@ -52,6 +53,10 @@ function _M.do_access(opts)
     end
 
     request.do_request(opts)
+end
+
+function _M.do_header_filter()
+    filter.do_header_filter()
 end
 
 return _M

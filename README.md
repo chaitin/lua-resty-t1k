@@ -30,5 +30,10 @@ Production ready.
              remote_addr = "http_x_forwarded_for: 1",   -- remote address from ngx.var.VARIABLE, string, default from ngx.var.remote_addr. Do not specify this option unless you know what are doing.
          }
      }
+
+     header_filter_by_lua_block {
+        local t1k = require "resty.t1k"
+        t1k.do_header_filter()
+     }
  }
 ```
