@@ -11,6 +11,7 @@ plan tests => repeat_each() * (blocks() * 2 + 2);
 run_tests();
 
 __DATA__
+
 === TEST 1: err_fmt
 --- http_config eval: $::HttpConfig
 --- config
@@ -26,6 +27,7 @@ GET /t
 --- error_log
 lua-resty-t1k: test - 0001 - 1.0000
 --- log_level: error
+
 
 
 === TEST 2: warn_fmt
@@ -44,6 +46,7 @@ GET /t
 --- error_log
 lua-resty-t1k: test - 0001 - 1.0000
 --- log_level: warn
+
 
 
 === TEST 3: debug_fmt

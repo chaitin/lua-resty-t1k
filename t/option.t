@@ -11,6 +11,7 @@ plan tests => repeat_each() * (blocks() * 3 + 1);
 run_tests();
 
 __DATA__
+
 === TEST 1: do_access disabled
 --- http_config eval: $::HttpConfig
 --- config
@@ -40,6 +41,7 @@ lua-resty-t1k: t1k is not enabled
 --- log_level: debug
 
 
+
 === TEST 2: do_access invalid host
 --- http_config eval: $::HttpConfig
 --- config
@@ -65,6 +67,7 @@ passed
 --- error_log
 lua-resty-t1k: invalid t1k host: nil
 --- log_level: debug
+
 
 
 === TEST 3: do_access invalid port

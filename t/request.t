@@ -11,6 +11,7 @@ plan tests => repeat_each() * (blocks() * 3 + 6);
 run_tests();
 
 __DATA__
+
 === TEST 1: do_request blocked
 --- http_config eval: $::HttpConfig
 --- config
@@ -53,6 +54,7 @@ lua-resty-t1k: successfully connected to t1k server 127.0.0.1:18000
 --- log_level: debug
 
 
+
 === TEST 2: do_request passed
 --- http_config eval: $::HttpConfig
 --- config
@@ -91,6 +93,7 @@ passed
 --- error_log
 lua-resty-t1k: successfully connected to t1k server 127.0.0.1:18000
 --- log_level: debug
+
 
 
 === TEST 3: do_request trim request body
@@ -134,6 +137,7 @@ lua-resty-t1k: request body is too long: 123 bytes, cut to 64 bytes
 --- log_level: debug
 
 
+
 === TEST 4: do_access monitor
 --- http_config eval: $::HttpConfig
 --- config
@@ -174,6 +178,7 @@ lua-resty-t1k: successfully connected to t1k server 127.0.0.1:18000
 --- log_level: debug
 
 
+
 === TEST 5 do_request refuse connection
 --- http_config eval: $::HttpConfig
 --- config
@@ -207,6 +212,7 @@ passed
 --- error_log
 lua-resty-t1k: failed to connect to t1k server 127.0.0.1:18000
 --- log_level: debug
+
 
 
 === TEST 6: do_request timeout
@@ -249,6 +255,7 @@ lua-resty-t1k: failed to receive info packet from t1k server 127.0.0.1:18000: ti
 --- log_level: debug
 
 
+
 === TEST 7: do_request unknown action
 --- http_config eval: $::HttpConfig
 --- config
@@ -287,6 +294,7 @@ lua-resty-t1k: unknown action from t1k server: ~
 --- log_level: debug
 
 
+
 === TEST 8: do_request remote address
 --- http_config eval: $::HttpConfig
 --- config
@@ -311,6 +319,7 @@ ngx.var.http_x_forwarded_for: -2 or ngx.var.remote_addr is 2001:db8:3333:4444:55
 ngx.var.http_non_existent_header or ngx.var.remote_addr is 127.0.0.1
 --- no_error_log
 [error]
+
 
 
 === TEST 9: do_request http2

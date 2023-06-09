@@ -11,6 +11,7 @@ plan tests => repeat_each() * (blocks() * 5);
 run_tests();
 
 __DATA__
+
 === TEST 1: do_header_filter
 --- http_config eval: $::HttpConfig
 --- config

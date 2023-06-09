@@ -8,6 +8,7 @@ _EOC_
 run_tests();
 
 __DATA__
+
 === TEST 1: integration test blocked
 --- http_config eval: $::HttpConfig
 --- config
@@ -51,6 +52,7 @@ lua-resty-t1k: successfully connected to t1k server detector.ip.addr:8000
 --- log_level: debug
 --- skip_eval
 4: not exists($ENV{INTEGRATION_TEST})
+
 
 
 === TEST 2: integration test blocked http2
@@ -99,6 +101,7 @@ lua-resty-t1k: successfully connected to t1k server detector.ip.addr:8000
 4: not exists($ENV{INTEGRATION_TEST})
 
 
+
 === TEST 3: integration test monitor
 --- http_config eval: $::HttpConfig
 --- config
@@ -141,6 +144,7 @@ lua-resty-t1k: successfully connected to t1k server detector.ip.addr:8000
 --- log_level: debug
 --- skip_eval
 4: not exists($ENV{INTEGRATION_TEST})
+
 
 
 === TEST 4: integration test monitor http2
@@ -188,6 +192,7 @@ lua-resty-t1k: successfully connected to t1k server detector.ip.addr:8000
 4: not exists($ENV{INTEGRATION_TEST})
 
 
+
 === TEST 5: integration test disabled
 --- http_config eval: $::HttpConfig
 --- config
@@ -220,6 +225,7 @@ passed
 --- error_log
 lua-resty-t1k: t1k is not enabled
 --- log_level: debug
+
 
 
 === TEST 6: integration test configuration priority
@@ -274,6 +280,7 @@ lua-resty-t1k: t1k is not enabled
 6: not exists($ENV{INTEGRATION_TEST})
 
 
+
 === TEST 7: integration test blocked extra headers
 --- http_config eval: $::HttpConfig
 --- config
@@ -325,6 +332,7 @@ lua-resty-t1k: successfully connected to t1k server 127.0.0.1:18000
 --- log_level: debug
 
 
+
 === TEST 8: integration test passed extra headers
 --- http_config eval: $::HttpConfig
 --- config
@@ -372,6 +380,7 @@ passed
 --- error_log
 lua-resty-t1k: successfully connected to t1k server 127.0.0.1:18000
 --- log_level: debug
+
 
 
 === TEST 9: integration test monitor extra headers

@@ -11,6 +11,7 @@ plan tests => repeat_each() * (blocks() * 3);
 run_tests();
 
 __DATA__
+
 === TEST 1: read
 --- http_config eval: $::HttpConfig
 --- config
@@ -31,6 +32,7 @@ GET /t
 Hello, world!
 --- no_error_log
 [error]
+
 
 
 === TEST 2: read non-existent file
