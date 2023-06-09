@@ -267,6 +267,7 @@ local function do_socket(opts, header_buf, payload_buf)
 end
 
 function _M.do_request(opts)
+    -- why do you set this?
     ngx.ctx.t1k_enabled = 1
 
     local header_buf = build_header_buffer(opts)
@@ -299,8 +300,11 @@ function _M.do_request(opts)
     end
 
     local action = t[consts.TAG_HEAD]
+    -- could you replace the comma and question mark with meaningful constants?
     if action == "." then
         ngx.ctx.t1k_request_passed = 1
+        -- could you return the result of t1k check instead of use ngx.ctx.t1k_request_passed and t1k_request_success
+        -- like 0: pass 1: forbidden 2: error, with the error info
         return
     elseif action == "?" then
         ngx.ctx.t1k_request_passed = 0
@@ -310,6 +314,7 @@ function _M.do_request(opts)
         ngx.header.content_type = consts.BLOCK_CONTENT_TYPE
         local response = fmt(consts.BLOCK_CONTENT_FORMAT, rsp_code, event_id)
 
+        -- no need to set ngx.status, ngx.say or ngx.exit, let the caller handle it
         ngx.status = rsp_code
         ngx.say(response)
         return ngx.exit(ngx.status)
