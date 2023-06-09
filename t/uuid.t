@@ -11,6 +11,7 @@ plan tests => repeat_each() * (blocks() * 3);
 run_tests();
 
 __DATA__
+
 === TEST 1: generate_v4
 --- http_config eval: $::HttpConfig
 --- config

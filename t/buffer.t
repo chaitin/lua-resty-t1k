@@ -11,6 +11,7 @@ plan tests => repeat_each() * (blocks() * 3);
 run_tests();
 
 __DATA__
+
 === TEST 1: buffer add
 --- http_config eval: $::HttpConfig
 --- config
@@ -31,6 +32,7 @@ hello world!
 b:len(): 12
 --- no_error_log
 [error]
+
 
 
 === TEST 2: buffer add_lf
@@ -54,6 +56,7 @@ b:len(): 1
 [error]
 
 
+
 === TEST 3: buffer add_lf
 --- http_config eval: $::HttpConfig
 --- config
@@ -73,6 +76,7 @@ true
 b:len(): 2
 --- no_error_log
 [error]
+
 
 
 === TEST 4: buffer add_kv_lf
@@ -100,6 +104,7 @@ k2:v2
 b:len(): 12
 --- no_error_log
 [error]
+
 
 
 === TEST 5: buffer add_kv_crlf
