@@ -1,8 +1,11 @@
 local consts = require "resty.t1k.constants"
 local filter = require "resty.t1k.filter"
+local handler = require "resty.t1k.handler"
 local log = require "resty.t1k.log"
 local request = require "resty.t1k.request"
 local utils = require "resty.t1k.utils"
+
+local lower = string.lower
 
 local ngx = ngx
 local nlog = ngx.log
@@ -24,8 +27,18 @@ local DEFAULT_T1K_KEEPALIVE_TIMEOUT = 60 * 1000 -- 60s
 function _M.do_access(opts)
     opts = opts or {}
 
-    if not opts.mode or (opts.mode ~= consts.T1K_MODE_BLOCK and opts.mode ~= consts.T1K_MODE_MONITOR) then
+    if not opts.mode then
+        return
+    end
+
+    local mode = lower(opts.mode)
+    if mode == consts.MODE_OFF then
         nlog(debug_fmt("t1k is not enabled"))
+        return
+    end
+
+    if mode ~= consts.MODE_OFF and mode ~= consts.MODE_BLOCK and mode ~= consts.MODE_MONITOR then
+        nlog(err_fmt("invalid t1k mode: %s", opts.mode))
         return
     end
 
@@ -52,7 +65,22 @@ function _M.do_access(opts)
         opts.remote_addr_idx = idx
     end
 
-    request.do_request(opts)
+    local ok, err, result = request.do_request(opts)
+    if not ok then
+        nlog(err_fmt("failed to do request: %s", err))
+        return
+    end
+
+    if mode == consts.MODE_MONITOR then
+        nlog(debug_fmt("monitor mode, skip blocking"))
+        return
+    end
+
+    ok, err = handler.handle(result)
+    if not ok then
+        nlog(err_fmt("failed to handle result: %s", err))
+        return
+    end
 end
 
 function _M.do_header_filter()

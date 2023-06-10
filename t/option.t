@@ -12,27 +12,50 @@ run_tests();
 
 __DATA__
 
-=== TEST 1: do_access disabled
+=== TEST 1: do_access nil option
 --- http_config eval: $::HttpConfig
 --- config
-       location /t {
-           access_by_lua_block {
-               local t1k = require "resty.t1k"
+    location /t {
+        access_by_lua_block {
+            local t1k = require "resty.t1k"
+            t1k.do_access(nil)
+        }
 
-               local t = {
-                   mode = "off",
-               }
-
-               t1k.do_access(t)
-           }
-
-           content_by_lua_block {
-               ngx.say("passed")
-           }
-       }
+        content_by_lua_block {
+            ngx.say("passed")
+        }
+    }
 --- request
 GET /t/shell.php
---- response_body_like
+--- response_body
+passed
+--- no_error_log
+[debug]
+--- log_level: debug
+
+
+
+=== TEST 2: do_access disabled
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        access_by_lua_block {
+            local t1k = require "resty.t1k"
+
+            local t = {
+                mode = "off",
+            }
+
+            t1k.do_access(t)
+        }
+
+        content_by_lua_block {
+            ngx.say("passed")
+        }
+    }
+--- request
+GET /t/shell.php
+--- response_body
 passed
 --- no_error_log
 [error]
@@ -42,27 +65,54 @@ lua-resty-t1k: t1k is not enabled
 
 
 
-=== TEST 2: do_access invalid host
+=== TEST 3: do_access invalid mode
 --- http_config eval: $::HttpConfig
 --- config
-       location /t {
-           access_by_lua_block {
-               local t1k = require "resty.t1k"
+    location /t {
+        access_by_lua_block {
+            local t1k = require "resty.t1k"
 
-               local t = {
-                   mode = "block"
-               }
+            local t = {
+                mode = "invalid",
+            }
 
-               t1k.do_access(t)
-           }
+            t1k.do_access(t)
+        }
 
-           content_by_lua_block {
-               ngx.say("passed")
-           }
-       }
+        content_by_lua_block {
+            ngx.say("passed")
+        }
+    }
+--- request
+GET /t/shell.php
+--- response_body
+passed
+--- error_log
+lua-resty-t1k: invalid t1k mode: invalid
+
+
+
+=== TEST 4: do_access invalid host
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        access_by_lua_block {
+            local t1k = require "resty.t1k"
+
+            local t = {
+                mode = "block"
+            }
+
+            t1k.do_access(t)
+        }
+
+        content_by_lua_block {
+            ngx.say("passed")
+        }
+    }
 --- request
 GET /t
---- response_body_like
+--- response_body
 passed
 --- error_log
 lua-resty-t1k: invalid t1k host: nil
@@ -70,28 +120,28 @@ lua-resty-t1k: invalid t1k host: nil
 
 
 
-=== TEST 3: do_access invalid port
+=== TEST 5: do_access invalid port
 --- http_config eval: $::HttpConfig
 --- config
-       location /t {
-           access_by_lua_block {
-               local t1k = require "resty.t1k"
+    location /t {
+        access_by_lua_block {
+            local t1k = require "resty.t1k"
 
-               local t = {
-                   mode = "block",
-                   host = "127.0.0.1"
-               }
+            local t = {
+                mode = "block",
+                host = "127.0.0.1"
+            }
 
-               t1k.do_access(t)
-           }
+            t1k.do_access(t)
+        }
 
-           content_by_lua_block {
-               ngx.say("passed")
-           }
-       }
+        content_by_lua_block {
+            ngx.say("passed")
+        }
+    }
 --- request
 GET /t
---- response_body_like
+--- response_body
 passed
 --- error_log
 lua-resty-t1k: invalid t1k port: nil
