@@ -20,3 +20,6 @@ gen
 
 # Test::Nginx files
 t/servroot
+
+# luarocks build files
+*.src.rock
