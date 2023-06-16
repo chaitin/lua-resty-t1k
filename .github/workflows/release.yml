@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     branches:
-      - "master"
+      - "main"
     paths:
       - 'rockspec/**'
 
@@ -51,4 +51,4 @@ jobs:
           LUAROCKS_TOKEN: ${{ secrets.LUAROCKS_TOKEN }}
         run: |
           luarocks install dkjson
-          luarocks upload rockspec/lua-resty-t1k-${{ steps.release_env.outputs.version_withou_v }}-0.rockspec --api-key=${LUAROCKS_API_KEY}
+          luarocks upload rockspec/lua-resty-t1k-${{ steps.release_env.outputs.version_withou_v }}-0.rockspec --api-key=${{ secrets.LUAROCKS_API_KEY }}
