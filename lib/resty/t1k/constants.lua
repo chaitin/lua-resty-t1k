@@ -1,8 +1,11 @@
 local t = {}
 
-t.T1K_MODE_OFF = "off"
-t.T1K_MODE_BLOCK = "block"
-t.T1K_MODE_MONITOR = "monitor"
+t.ACTION_PASSED = "."
+t.ACTION_BLOCKED = "?"
+
+t.MODE_OFF = "off"
+t.MODE_BLOCK = "block"
+t.MODE_MONITOR = "monitor"
 
 t.T1K_HEADER_SIZE = 5
 
@@ -17,8 +20,6 @@ t.MASK_FIRST = 0x40
 t.MASK_LAST = 0x80
 
 t.NGX_HTTP_HEADER_PREFIX = "http_"
-
-t.ERR_TOO_MANY_HEADERS = "truncated"
 
 t.BLOCK_CONTENT_TYPE = "application/json"
 t.BLOCK_CONTENT_FORMAT = [[

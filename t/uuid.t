@@ -15,12 +15,12 @@ __DATA__
 === TEST 1: generate_v4
 --- http_config eval: $::HttpConfig
 --- config
-        location /t {
-            content_by_lua_block {
-                local uuid = require "resty.t1k.uuid"
-                ngx.say(uuid.generate_v4())
-            }
+    location /t {
+        content_by_lua_block {
+            local uuid = require "resty.t1k.uuid"
+            ngx.say(uuid.generate_v4())
         }
+    }
 --- request
 GET /t
 --- response_body_like

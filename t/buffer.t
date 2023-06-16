@@ -15,16 +15,16 @@ __DATA__
 === TEST 1: buffer add
 --- http_config eval: $::HttpConfig
 --- config
-        location /t {
-            content_by_lua_block {
-                local buffer = require "resty.t1k.buffer"
-                local b = buffer:new()
-                b:add("hello")
-                b:add(" ", "world", "!")
-                ngx.say(b:tostring())
-                ngx.say("b:len(): ", b:len())
-            }
+    location /t {
+        content_by_lua_block {
+            local buffer = require "resty.t1k.buffer"
+            local b = buffer:new()
+            b:add("hello")
+            b:add(" ", "world", "!")
+            ngx.say(b:tostring())
+            ngx.say("b:len(): ", b:len())
         }
+    }
 --- request
 GET /t
 --- response_body
@@ -38,15 +38,15 @@ b:len(): 12
 === TEST 2: buffer add_lf
 --- http_config eval: $::HttpConfig
 --- config
-        location /t {
-            content_by_lua_block {
-                local buffer = require "resty.t1k.buffer"
-                local b = buffer:new()
-                b:add_lf()
-                ngx.say(b:tostring() == "\x0a")
-                ngx.say("b:len(): ", b:len())
-            }
+    location /t {
+        content_by_lua_block {
+            local buffer = require "resty.t1k.buffer"
+            local b = buffer:new()
+            b:add_lf()
+            ngx.say(b:tostring() == "\x0a")
+            ngx.say("b:len(): ", b:len())
         }
+    }
 --- request
 GET /t
 --- response_body
@@ -60,15 +60,15 @@ b:len(): 1
 === TEST 3: buffer add_lf
 --- http_config eval: $::HttpConfig
 --- config
-        location /t {
-            content_by_lua_block {
-                local buffer = require "resty.t1k.buffer"
-                local b = buffer:new()
-                b:add_crlf()
-                ngx.say(b:tostring() == "\x0d\x0a")
-                ngx.say("b:len(): ", b:len())
-            }
+    location /t {
+        content_by_lua_block {
+            local buffer = require "resty.t1k.buffer"
+            local b = buffer:new()
+            b:add_crlf()
+            ngx.say(b:tostring() == "\x0d\x0a")
+            ngx.say("b:len(): ", b:len())
         }
+    }
 --- request
 GET /t
 --- response_body
@@ -82,18 +82,18 @@ b:len(): 2
 === TEST 4: buffer add_kv_lf
 --- http_config eval: $::HttpConfig
 --- config
-        location /t {
-            content_by_lua_block {
-                local buffer = require "resty.t1k.buffer"
-                local b = buffer:new()
-                b:add_kv_lf("k1", "v1")
-                ngx.print(b:tostring())
-                ngx.say("b:len(): ", b:len())
-                b:add_kv_lf("k2", "v2")
-                ngx.print(b:tostring())
-                ngx.say("b:len(): ", b:len())
-            }
+    location /t {
+        content_by_lua_block {
+            local buffer = require "resty.t1k.buffer"
+            local b = buffer:new()
+            b:add_kv_lf("k1", "v1")
+            ngx.print(b:tostring())
+            ngx.say("b:len(): ", b:len())
+            b:add_kv_lf("k2", "v2")
+            ngx.print(b:tostring())
+            ngx.say("b:len(): ", b:len())
         }
+    }
 --- request
 GET /t
 --- response_body
@@ -110,18 +110,18 @@ b:len(): 12
 === TEST 5: buffer add_kv_crlf
 --- http_config eval: $::HttpConfig
 --- config
-        location /t {
-            content_by_lua_block {
-                local buffer = require "resty.t1k.buffer"
-                local b = buffer:new()
-                b:add_kv_crlf("k1", "v1")
-                ngx.print(b:tostring())
-                ngx.say("b:len(): ", b:len())
-                b:add_kv_crlf("k2", "v2")
-                ngx.print(b:tostring())
-                ngx.print("b:len(): ", b:len())
-            }
+    location /t {
+        content_by_lua_block {
+            local buffer = require "resty.t1k.buffer"
+            local b = buffer:new()
+            b:add_kv_crlf("k1", "v1")
+            ngx.print(b:tostring())
+            ngx.say("b:len(): ", b:len())
+            b:add_kv_crlf("k2", "v2")
+            ngx.print(b:tostring())
+            ngx.print("b:len(): ", b:len())
         }
+    }
 --- request
 GET /t
 --- response_body eval

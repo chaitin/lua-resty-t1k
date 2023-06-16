@@ -15,14 +15,14 @@ __DATA__
 === TEST 1: read
 --- http_config eval: $::HttpConfig
 --- config
-        location /t {
-            content_by_lua_block {
-                local file = require "resty.t1k.file"
-                local path = ngx.var.document_root .. "/foo.bar"
-                local ok, err, content = file.read(path)
-                ngx.print(content)
-            }
+    location /t {
+        content_by_lua_block {
+            local file = require "resty.t1k.file"
+            local path = ngx.var.document_root .. "/foo.bar"
+            local ok, err, content = file.read(path)
+            ngx.print(content)
         }
+    }
 --- user_files
 >>> foo.bar
 Hello, world!
@@ -38,13 +38,13 @@ Hello, world!
 === TEST 2: read non-existent file
 --- http_config eval: $::HttpConfig
 --- config
-        location /t {
-            content_by_lua_block {
-                local file = require "resty.t1k.file"
-                local ok, err, content = file.read("/opt/non_existent_file")
-                ngx.say("err: ", err)
-            }
+    location /t {
+        content_by_lua_block {
+            local file = require "resty.t1k.file"
+            local ok, err, content = file.read("/opt/non_existent_file")
+            ngx.say("err: ", err)
         }
+    }
 --- request
 GET /t
 --- response_body

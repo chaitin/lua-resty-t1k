@@ -15,20 +15,20 @@ __DATA__
 === TEST 1: do_header_filter
 --- http_config eval: $::HttpConfig
 --- config
-        location /t {
-            access_by_lua_block {
-                ngx.ctx.t1k_extra_header = "k1:v1\nk2:v2\nk3:v3\n"
-            }
-
-            header_filter_by_lua_block {
-                local filter = require "resty.t1k.filter"
-                filter.do_header_filter()
-            }
-
-            content_by_lua_block {
-                ngx.say("hi")
-            }
+    location /t {
+        access_by_lua_block {
+            ngx.ctx.t1k_extra_header = "k1:v1\nk2:v2\nk3:v3\n"
         }
+
+        header_filter_by_lua_block {
+            local filter = require "resty.t1k.filter"
+            filter.do_header_filter()
+        }
+
+        content_by_lua_block {
+            ngx.say("hi")
+        }
+    }
 --- request
 GET /t
 --- response_headers

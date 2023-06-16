@@ -15,12 +15,12 @@ __DATA__
 === TEST 1: err_fmt
 --- http_config eval: $::HttpConfig
 --- config
-        location /t {
-            content_by_lua_block {
-                local log = require "resty.t1k.log"
-                ngx.log(log.err_fmt("%s - %04d - %.4f", "test", 1, 1))
-            }
+    location /t {
+        content_by_lua_block {
+            local log = require "resty.t1k.log"
+            ngx.log(log.err_fmt("%s - %04d - %.4f", "test", 1, 1))
         }
+    }
 --- request
 GET /t
 [error]
@@ -33,12 +33,12 @@ lua-resty-t1k: test - 0001 - 1.0000
 === TEST 2: warn_fmt
 --- http_config eval: $::HttpConfig
 --- config
-        location /t {
-            content_by_lua_block {
-                local log = require "resty.t1k.log"
-                ngx.log(log.warn_fmt("%s - %04d - %.4f", "test", 1, 1))
-            }
+    location /t {
+        content_by_lua_block {
+            local log = require "resty.t1k.log"
+            ngx.log(log.warn_fmt("%s - %04d - %.4f", "test", 1, 1))
         }
+    }
 --- request
 GET /t
 --- no_error_log
@@ -52,12 +52,12 @@ lua-resty-t1k: test - 0001 - 1.0000
 === TEST 3: debug_fmt
 --- http_config eval: $::HttpConfig
 --- config
-        location /t {
-            content_by_lua_block {
-                local log = require "resty.t1k.log"
-                ngx.log(log.debug_fmt("%s - %04d - %.4f", "test", 1, 1))
-            }
+    location /t {
+        content_by_lua_block {
+            local log = require "resty.t1k.log"
+            ngx.log(log.debug_fmt("%s - %04d - %.4f", "test", 1, 1))
         }
+    }
 --- request
 GET /t
 --- no_error_log
