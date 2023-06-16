@@ -28,7 +28,22 @@ __DATA__
                 keepalive_timeout = 10000,
             }
 
-            t1k.do_access(t)
+            local ok, err, result = t1k.do_access(t)
+            if not ok then
+                ngx.log(ngx.ERR, err)
+                return
+            end
+
+            if t.mode ~= "block" then
+                ngx.log(ngx.DEBUG, "skip blocking")
+                return
+            end
+
+            ok, err = t1k.do_handle(result)
+            if not ok then
+                ngx.log(ngx.ERR, err)
+                return
+            end
         }
 
         header_filter_by_lua_block {
@@ -76,7 +91,22 @@ lua-resty-t1k: successfully connected to t1k server detector.ip.addr:8000
                 keepalive_timeout = 10000,
             }
 
-            t1k.do_access(t)
+            local ok, err, result = t1k.do_access(t)
+            if not ok then
+                ngx.log(ngx.ERR, err)
+                return
+            end
+
+            if t.mode ~= "block" then
+                ngx.log(ngx.DEBUG, "skip blocking")
+                return
+            end
+
+            ok, err = t1k.do_handle(result)
+            if not ok then
+                ngx.log(ngx.ERR, err)
+                return
+            end
         }
 
         header_filter_by_lua_block {
@@ -125,7 +155,22 @@ lua-resty-t1k: successfully connected to t1k server detector.ip.addr:8000
                 keepalive_timeout = 10000,
             }
 
-            t1k.do_access(t)
+            local ok, err, result = t1k.do_access(t)
+            if not ok then
+                ngx.log(ngx.ERR, err)
+                return
+            end
+
+            if t.mode ~= "block" then
+                ngx.log(ngx.DEBUG, "skip blocking")
+                return
+            end
+
+            ok, err = t1k.do_handle(result)
+            if not ok then
+                ngx.log(ngx.ERR, err)
+                return
+            end
         }
 
         header_filter_by_lua_block {
@@ -145,7 +190,6 @@ passed
 [error]
 --- error_log
 lua-resty-t1k: successfully connected to t1k server detector.ip.addr:8000
-lua-resty-t1k: monitor mode, skip blocking
 --- log_level: debug
 --- skip_eval
 4: not exists($ENV{INTEGRATION_TEST})
@@ -171,7 +215,22 @@ lua-resty-t1k: monitor mode, skip blocking
                 keepalive_timeout = 10000,
             }
 
-            t1k.do_access(t)
+            local ok, err, result = t1k.do_access(t)
+            if not ok then
+                ngx.log(ngx.ERR, err)
+                return
+            end
+
+            if t.mode ~= "block" then
+                ngx.log(ngx.DEBUG, "skip blocking")
+                return
+            end
+
+            ok, err = t1k.do_handle(result)
+            if not ok then
+                ngx.log(ngx.ERR, err)
+                return
+            end
         }
 
         header_filter_by_lua_block {
@@ -192,7 +251,7 @@ passed
 [error]
 --- error_log
 lua-resty-t1k: successfully connected to t1k server detector.ip.addr:8000
-lua-resty-t1k: monitor mode, skip blocking
+skip blocking
 --- log_level: debug
 --- skip_eval
 4: not exists($ENV{INTEGRATION_TEST})
@@ -210,7 +269,22 @@ lua-resty-t1k: monitor mode, skip blocking
                 mode = "off",
             }
 
-            t1k.do_access(t)
+            local ok, err, result = t1k.do_access(t)
+            if not ok then
+                ngx.log(ngx.ERR, err)
+                return
+            end
+
+            if t.mode ~= "block" then
+                ngx.log(ngx.DEBUG, "skip blocking")
+                return
+            end
+
+            ok, err = t1k.do_handle(result)
+            if not ok then
+                ngx.log(ngx.ERR, err)
+                return
+            end
         }
 
         header_filter_by_lua_block {
@@ -230,6 +304,7 @@ passed
 [error]
 --- error_log
 lua-resty-t1k: t1k is not enabled
+skip blocking
 --- log_level: debug
 
 
@@ -252,7 +327,22 @@ lua-resty-t1k: t1k is not enabled
             keepalive_timeout = 10000,
         }
 
-        t1k.do_access(t)
+        local ok, err, result = t1k.do_access(t)
+        if not ok then
+            ngx.log(ngx.ERR, err)
+            return
+        end
+
+        if t.mode ~= "block" then
+            ngx.log(ngx.DEBUG, "skip blocking")
+            return
+        end
+
+        ok, err = t1k.do_handle(result)
+        if not ok then
+            ngx.log(ngx.ERR, err)
+            return
+        end
     }
 
     header_filter_by_lua_block {
@@ -306,7 +396,22 @@ lua-resty-t1k: t1k is not enabled
                 keepalive_timeout = 10000,
             }
 
-            t1k.do_access(t)
+            local ok, err, result = t1k.do_access(t)
+            if not ok then
+                ngx.log(ngx.ERR, err)
+                return
+            end
+
+            if t.mode ~= "block" then
+                ngx.log(ngx.DEBUG, "skip blocking")
+                return
+            end
+
+            ok, err = t1k.do_handle(result)
+            if not ok then
+                ngx.log(ngx.ERR, err)
+                return
+            end
         }
 
         header_filter_by_lua_block {
@@ -360,7 +465,22 @@ lua-resty-t1k: successfully connected to t1k server 127.0.0.1:18000
                 keepalive_timeout = 10000,
             }
 
-            t1k.do_access(t)
+            local ok, err, result = t1k.do_access(t)
+            if not ok then
+                ngx.log(ngx.ERR, err)
+                return
+            end
+
+            if t.mode ~= "block" then
+                ngx.log(ngx.DEBUG, "skip blocking")
+                return
+            end
+
+            ok, err = t1k.do_handle(result)
+            if not ok then
+                ngx.log(ngx.ERR, err)
+                return
+            end
         }
 
         header_filter_by_lua_block {
@@ -410,7 +530,22 @@ lua-resty-t1k: successfully connected to t1k server 127.0.0.1:18000
                 keepalive_timeout = 10000,
             }
 
-            t1k.do_access(t)
+            local ok, err, result = t1k.do_access(t)
+            if not ok then
+                ngx.log(ngx.ERR, err)
+                return
+            end
+
+            if t.mode ~= "block" then
+                ngx.log(ngx.DEBUG, "skip blocking")
+                return
+            end
+
+            ok, err = t1k.do_handle(result)
+            if not ok then
+                ngx.log(ngx.ERR, err)
+                return
+            end
         }
 
         header_filter_by_lua_block {
@@ -435,5 +570,5 @@ passed
 [error]
 --- error_log
 lua-resty-t1k: successfully connected to t1k server 127.0.0.1:18000
-lua-resty-t1k: monitor mode, skip blocking
+skip blocking
 --- log_level: debug

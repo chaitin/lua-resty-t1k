@@ -17,7 +17,7 @@ Production ready.
      access_by_lua_block {
          local t1k = require "resty.t1k"
 
-         t1k.do_access {
+         local t = {
              mode = "block",                            -- block or monitor or off, default off
              host = "foo.bar",                          -- required, SafeLine WAF detection service host
              port = 8000,                               -- required, SafeLine WAF detection service port
@@ -29,6 +29,23 @@ Production ready.
              keepalive_timeout = 60000,                 -- idle connection timeout, in milliseconds, integer, default 60s (60000ms)
              remote_addr = "http_x_forwarded_for: 1",   -- remote address from ngx.var.VARIABLE, string, default from ngx.var.remote_addr. Do not specify this option unless you know what are doing.
          }
+
+         local ok, err, result = t1k.do_access(t)
+         if not ok then
+             ngx.log(ngx.ERR, err)
+             return
+         end
+
+         if t.mode ~= "block" then
+             ngx.log(ngx.DEBUG, "skip blocking")
+             return
+         end
+
+         ok, err = t1k.do_handle(result)
+         if not ok then
+             ngx.log(ngx.ERR, err)
+             return
+         end
      }
 
      header_filter_by_lua_block {

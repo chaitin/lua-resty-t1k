@@ -291,10 +291,16 @@ function _M.do_request(opts)
         return ok, err, nil
     end
 
+    if opts.mode == consts.MODE_BLOCK then
+        local extra_header = t[consts.TAG_EXTRA_HEADER]
+        if extra_header then
+            ngx.ctx.t1k_extra_header = extra_header
+        end
+    end
+
     local result = {
         action = t[consts.TAG_HEAD],
         status = t[consts.TAG_BODY],
-        extra_header = t[consts.TAG_EXTRA_HEADER],
         event_id = utils.get_event_id(t[consts.TAG_EXTRA_BODY]),
     }
 

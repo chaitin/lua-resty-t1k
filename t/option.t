@@ -18,7 +18,12 @@ __DATA__
     location /t {
         access_by_lua_block {
             local t1k = require "resty.t1k"
-            t1k.do_access(nil)
+
+            local ok, err, _ = t1k.do_access(nil)
+            if not ok then
+                ngx.log(ngx.ERR, err)
+                return
+            end
         }
 
         content_by_lua_block {
@@ -46,7 +51,11 @@ passed
                 mode = "off",
             }
 
-            t1k.do_access(t)
+            local ok, err, _ = t1k.do_access(t)
+            if not ok then
+                ngx.log(ngx.ERR, err)
+                return
+            end
         }
 
         content_by_lua_block {
@@ -76,7 +85,11 @@ lua-resty-t1k: t1k is not enabled
                 mode = "invalid",
             }
 
-            t1k.do_access(t)
+            local ok, err, _ = t1k.do_access(t)
+            if not ok then
+                ngx.log(ngx.ERR, err)
+                return
+            end
         }
 
         content_by_lua_block {
@@ -103,7 +116,11 @@ lua-resty-t1k: invalid t1k mode: invalid
                 mode = "block"
             }
 
-            t1k.do_access(t)
+            local ok, err, _ = t1k.do_access(t)
+            if not ok then
+                ngx.log(ngx.ERR, err)
+                return
+            end
         }
 
         content_by_lua_block {
@@ -132,7 +149,11 @@ lua-resty-t1k: invalid t1k host: nil
                 host = "127.0.0.1"
             }
 
-            t1k.do_access(t)
+            local ok, err, _ = t1k.do_access(t)
+            if not ok then
+                ngx.log(ngx.ERR, err)
+                return
+            end
         }
 
         content_by_lua_block {

@@ -6,7 +6,7 @@ _EOC_
 
 repeat_each(3);
 
-plan tests => repeat_each() * (blocks() * 3 + 4);
+plan tests => repeat_each() * (blocks() * 3);
 
 run_tests();
 
@@ -52,7 +52,6 @@ passed
             local t = {
                 action = "?",
                 status = 405,
-                extra_header = "k1:v1\nk2:v2\nk3:v3\n",
                 event_id = "c0c039a7c348486eaffd9e2f9846b66b",
             }
 
@@ -73,11 +72,6 @@ passed
     }
 --- request
 GET /t
---- response_headers
-Content-Type: application/json
-k1: v1
-k2: v2
-k3: v3
 --- response_body
 {"code": 405, "success":false, "message": "blocked by Chaitin SafeLine Web Application Firewall", "event_id": "c0c039a7c348486eaffd9e2f9846b66b"}
 --- error_code eval
@@ -115,7 +109,7 @@ GET /t
 --- response_body
 passed
 --- error_log
-unknown action from t1k server: ~
+lua-resty-t1k: unknown action from t1k server: ~
 
 
 
@@ -141,4 +135,4 @@ GET /t
 --- response_body
 passed
 --- error_log
-unknown action from t1k server: nil
+lua-resty-t1k: invalid result type: nil
