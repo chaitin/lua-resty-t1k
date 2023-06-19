@@ -57,10 +57,6 @@ jobs:
           lfs: true
 
       - name: Run tests
-        run: |
-          DETECTOR_IP=$(dig detector +short)
-          curl -fs -X POST -H "Content-Type: application/octet-stream" --data-binary "@ci/bytecode" "http://${DETECTOR_IP}:8001/update/policy"
-          sed -i "s/detector.ip.addr/${DETECTOR_IP}/g" t/integration.t
-          prove -r t/
-        env:
-          INTEGRATION_TEST: 1
+        run: |          
+          curl -fs -X POST -H "Content-Type: application/octet-stream" --data-binary "@ci/bytecode" "http://detector:8001/update/policy"
+          env DETECTOR_IP=$(dig detector +short) prove -r t/

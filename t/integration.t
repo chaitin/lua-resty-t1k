@@ -1,5 +1,9 @@
 use Test::Nginx::Socket 'no_plan';
 
+our $MainConfig = <<'_EOC_';
+env DETECTOR_IP;
+_EOC_
+
 our $HttpConfig = <<'_EOC_';
     lua_package_path "lib/?.lua;/usr/local/share/lua/5.1/?.lua;;";
     lua_socket_log_errors off;
@@ -10,6 +14,7 @@ run_tests();
 __DATA__
 
 === TEST 1: integration test blocked
+--- main_config eval: $::MainConfig
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
@@ -18,7 +23,7 @@ __DATA__
 
             local t = {
                 mode = "block",
-                host = "detector.ip.addr",
+                host = os.getenv("DETECTOR_IP"),
                 port = 8000,
                 connect_timeout = 1000,
                 send_timeout = 1000,
@@ -64,15 +69,15 @@ Content-Type: application/json
 --- error_code: 403
 --- no_error_log
 [error]
---- error_log
-lua-resty-t1k: successfully connected to t1k server detector.ip.addr:8000
+--- error_log eval
+"lua-resty-t1k: successfully connected to t1k server $ENV{DETECTOR_IP}:8000"
 --- log_level: debug
 --- skip_eval
-4: not exists($ENV{INTEGRATION_TEST})
-
+4: not exists($ENV{DETECTOR_IP})
 
 
 === TEST 2: integration test blocked http2
+--- main_config eval: $::MainConfig
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
@@ -81,7 +86,7 @@ lua-resty-t1k: successfully connected to t1k server detector.ip.addr:8000
 
             local t = {
                 mode = "block",
-                host = "detector.ip.addr",
+                host = os.getenv("DETECTOR_IP"),
                 port = 8000,
                 connect_timeout = 1000,
                 send_timeout = 1000,
@@ -128,15 +133,16 @@ Content-Type: application/json
 --- error_code: 403
 --- no_error_log
 [error]
---- error_log
-lua-resty-t1k: successfully connected to t1k server detector.ip.addr:8000
+--- error_log eval
+"lua-resty-t1k: successfully connected to t1k server $ENV{DETECTOR_IP}:8000"
 --- log_level: debug
 --- skip_eval
-4: not exists($ENV{INTEGRATION_TEST})
+4: not exists($ENV{DETECTOR_IP})
 
 
 
 === TEST 3: integration test monitor
+--- main_config eval: $::MainConfig
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
@@ -145,7 +151,7 @@ lua-resty-t1k: successfully connected to t1k server detector.ip.addr:8000
 
             local t = {
                 mode = "monitor",
-                host = "detector.ip.addr",
+                host = os.getenv("DETECTOR_IP"),
                 port = 8000,
                 connect_timeout = 1000,
                 send_timeout = 1000,
@@ -188,15 +194,16 @@ GET /t/shell.php
 passed
 --- no_error_log
 [error]
---- error_log
-lua-resty-t1k: successfully connected to t1k server detector.ip.addr:8000
+--- error_log eval
+"lua-resty-t1k: successfully connected to t1k server $ENV{DETECTOR_IP}:8000"
 --- log_level: debug
 --- skip_eval
-4: not exists($ENV{INTEGRATION_TEST})
+4: not exists($ENV{DETECTOR_IP})
 
 
 
 === TEST 4: integration test monitor http2
+--- main_config eval: $::MainConfig
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
@@ -205,7 +212,7 @@ lua-resty-t1k: successfully connected to t1k server detector.ip.addr:8000
 
             local t = {
                 mode = "monitor",
-                host = "detector.ip.addr",
+                host = os.getenv("DETECTOR_IP"),
                 port = 8000,
                 connect_timeout = 1000,
                 send_timeout = 1000,
@@ -249,12 +256,11 @@ GET /t/shell.php
 passed
 --- no_error_log
 [error]
---- error_log
-lua-resty-t1k: successfully connected to t1k server detector.ip.addr:8000
-skip blocking
+--- error_log eval
+["lua-resty-t1k: successfully connected to t1k server $ENV{DETECTOR_IP}:8000", "skip blocking"]
 --- log_level: debug
 --- skip_eval
-4: not exists($ENV{INTEGRATION_TEST})
+4: not exists($ENV{DETECTOR_IP})
 
 
 
@@ -310,6 +316,7 @@ skip blocking
 
 
 === TEST 6: integration test configuration priority
+--- main_config eval: $::MainConfig
 --- http_config eval: $::HttpConfig
 --- config
     access_by_lua_block {
@@ -317,7 +324,7 @@ skip blocking
 
         local t = {
             mode = "block",
-            host = "detector.ip.addr",
+            host = os.getenv("DETECTOR_IP"),
             port = 8000,
             connect_timeout = 1000,
             send_timeout = 1000,
@@ -373,7 +380,7 @@ skip blocking
 --- no_error_log
 [error]
 --- skip_eval
-6: not exists($ENV{INTEGRATION_TEST})
+6: not exists($ENV{DETECTOR_IP})
 
 
 
