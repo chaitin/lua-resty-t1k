@@ -18,6 +18,7 @@ jobs:
     strategy:
       matrix:
         openresty_version:
+          - 1.15.8.3
           - 1.17.8.2
           - 1.19.9.1
           - 1.21.4.1
