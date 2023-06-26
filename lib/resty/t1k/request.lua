@@ -224,8 +224,7 @@ end
 
 local function do_socket(opts, header_buf, payload_buf)
     local ok, err
-    local t, sock
-    local host, port = opts.host, opts.port
+    local t, sock, server
 
     sock, err = ngx.socket.tcp()
     if not sock then
@@ -233,8 +232,13 @@ local function do_socket(opts, header_buf, payload_buf)
         return nil, err, nil
     end
 
-    local server = fmt("%s:%d", host, port)
-    ok, err = sock:connect(host, port)
+    if opts.uds then
+        server = opts.host
+        ok, err = sock:connect(opts.host)
+    else
+        server = fmt("%s:%d", opts.host, opts.port)
+        ok, err = sock:connect(opts.host, opts.port)
+    end
     if not ok then
         sock:close()
         err = fmt("failed to connect to t1k server %s: %s", server, err)

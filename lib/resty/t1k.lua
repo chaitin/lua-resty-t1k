@@ -24,44 +24,51 @@ local DEFAULT_T1K_REQ_BODY_SIZE = 1024 -- 1024 KB
 local DEFAULT_T1K_KEEPALIVE_SIZE = 256
 local DEFAULT_T1K_KEEPALIVE_TIMEOUT = 60 * 1000 -- 60s
 
-function _M.do_access(opts)
+function _M.do_access(t)
     local ok, err, result
-    opts = opts or {}
+    local opts = {}
+    t = t or {}
 
-    if not opts.mode then
+    if not t.mode then
         return true, nil, nil
     end
 
-    opts.mode = lower(opts.mode)
+    opts.mode = lower(t.mode)
     if opts.mode == consts.MODE_OFF then
         nlog(debug_fmt("t1k is not enabled"))
         return true, nil, nil
     end
 
     if opts.mode ~= consts.MODE_OFF and opts.mode ~= consts.MODE_BLOCK and opts.mode ~= consts.MODE_MONITOR then
-        err = log_fmt("invalid t1k mode: %s", opts.mode)
+        err = log_fmt("invalid t1k mode: %s", t.mode)
         return nil, err, nil
     end
 
-    if not opts.host then
-        err = log_fmt("invalid t1k host: %s", opts.host)
+    if not t.host then
+        err = log_fmt("invalid t1k host: %s", t.host)
         return nil, err, nil
     end
+    opts.host = t.host
 
-    if not tonumber(opts.port) then
-        err = log_fmt("invalid t1k port: %s", opts.port)
-        return nil, err, nil
+    if utils.starts_with(opts.host, consts.UNIX_SOCK_PREFIX) then
+        opts.uds = true
+    else
+        if not tonumber(t.port) then
+            err = log_fmt("invalid t1k port: %s", t.port)
+            return nil, err, nil
+        end
+        opts.port = tonumber(t.port)
     end
 
-    opts.connect_timeout = opts.connect_timeout or DEFAULT_T1K_CONNECT_TIMEOUT
-    opts.send_timeout = opts.send_timeout or DEFAULT_T1K_SEND_TIMEOUT
-    opts.read_timeout = opts.read_timeout or DEFAULT_T1K_READ_TIMEOUT
-    opts.req_body_size = opts.req_body_size or DEFAULT_T1K_REQ_BODY_SIZE
-    opts.keepalive_size = opts.keepalive_size or DEFAULT_T1K_KEEPALIVE_SIZE
-    opts.keepalive_timeout = opts.keepalive_timeout or DEFAULT_T1K_KEEPALIVE_TIMEOUT
+    opts.connect_timeout = t.connect_timeout or DEFAULT_T1K_CONNECT_TIMEOUT
+    opts.send_timeout = t.send_timeout or DEFAULT_T1K_SEND_TIMEOUT
+    opts.read_timeout = t.read_timeout or DEFAULT_T1K_READ_TIMEOUT
+    opts.req_body_size = t.req_body_size or DEFAULT_T1K_REQ_BODY_SIZE
+    opts.keepalive_size = t.keepalive_size or DEFAULT_T1K_KEEPALIVE_SIZE
+    opts.keepalive_timeout = t.keepalive_timeout or DEFAULT_T1K_KEEPALIVE_TIMEOUT
 
-    if opts.remote_addr then
-        local var, idx = utils.to_var_idx(opts.remote_addr)
+    if t.remote_addr then
+        local var, idx = utils.to_var_idx(t.remote_addr)
         opts.remote_addr_var = var
         opts.remote_addr_idx = idx
     end
