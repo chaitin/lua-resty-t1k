@@ -25,4 +25,6 @@ t.BLOCK_CONTENT_TYPE = "application/json"
 t.BLOCK_CONTENT_FORMAT = [[
 {"code": %s, "success":false, "message": "blocked by Chaitin SafeLine Web Application Firewall", "event_id": "%s"}]]
 
+t.UNIX_SOCK_PREFIX = "unix:"
+
 return t
