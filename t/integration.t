@@ -462,7 +462,7 @@ passed
 --- no_error_log
 [error]
 --- error_log eval
-["lua-resty-t1k: successfully connected to t1k server $ENV{DETECTOR_IP}:8000", "skip blocking"]
+"lua-resty-t1k: successfully connected to t1k server $ENV{DETECTOR_IP}:8000"
 --- log_level: debug
 --- skip_eval
 4: not exists($ENV{DETECTOR_IP})
