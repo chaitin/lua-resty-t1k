@@ -30,21 +30,9 @@ Production ready.
              remote_addr = "http_x_forwarded_for: 1",   -- remote address from ngx.var.VARIABLE, string, default from ngx.var.remote_addr
          }
 
-         local ok, err, result = t1k.do_access(t)
+         local ok, err, _ = t1k.do_access(t, true)
          if not ok then
              ngx.log(ngx.ERR, err)
-             return
-         end
-
-         if t.mode ~= "block" then
-             ngx.log(ngx.DEBUG, "skip blocking")
-             return
-         end
-
-         ok, err = t1k.do_handle(result)
-         if not ok then
-             ngx.log(ngx.ERR, err)
-             return
          end
      }
 

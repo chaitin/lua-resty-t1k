@@ -24,7 +24,7 @@ local DEFAULT_T1K_REQ_BODY_SIZE = 1024 -- 1024 KB
 local DEFAULT_T1K_KEEPALIVE_SIZE = 256
 local DEFAULT_T1K_KEEPALIVE_TIMEOUT = 60 * 1000 -- 60s
 
-function _M.do_access(t)
+function _M.do_access(t, handle)
     local ok, err, result
     local opts = {}
     t = t or {}
@@ -74,6 +74,14 @@ function _M.do_access(t)
     end
 
     ok, err, result = request.do_request(opts)
+    if not ok then
+        return ok, err, result
+    end
+
+    if handle and opts.mode == consts.MODE_BLOCK then
+        ok, err = _M.do_handle(result)
+    end
+
     return ok, err, result
 end
 
