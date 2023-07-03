@@ -1,5 +1,9 @@
 # lua-resty-t1k
 
+[![LuaRocks](https://img.shields.io/luarocks/v/blaisewang/lua-resty-t1k?style=flat-square)](https://luarocks.org/modules/blaisewang/lua-resty-t1k)
+[![Releases](https://img.shields.io/github/v/release/chaitin/lua-resty-t1k?style=flat-square)](https://github.com/chaitin/lua-resty-t1k/releases)
+[![License](https://img.shields.io/github/license/chaitin/lua-resty-t1k?color=ff69b4&style=flat-square)](https://github.com/chaitin/lua-resty-t1k/blob/main/LICENSE)
+
 ## Name
 
 Lua implementation of the T1K protocol for [Chaitin/SafeLine](https://github.com/chaitin/safeline) Web Application Firewall.
@@ -8,7 +12,7 @@ Lua implementation of the T1K protocol for [Chaitin/SafeLine](https://github.com
 
 Production ready.
 
-[![Test](https://github.com/chaitin/lua-resty-t1k/actions/workflows/test.yml/badge.svg)](https://github.com/chaitin/lua-resty-t1k/actions)
+[![Test](https://img.shields.io/github/actions/workflow/status/chaitin/lua-resty-t1k/test.yml?logo=github&style=flat-square)](https://github.com/chaitin/lua-resty-t1k/actions)
 
 ## Synopsis
 
