@@ -20,6 +20,12 @@ Production ready.
 luarocks install lua-resty-t1k
 ```
 
+If you are in Mainland China
+
+```bash
+luarocks install lua-resty-t1k --server https://luarocks.cn
+```
+
 ## Synopsis
 
 ```lua
