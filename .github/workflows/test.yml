@@ -58,6 +58,6 @@ jobs:
           lfs: true
 
       - name: Run tests
-        run: |          
+        run: |
           curl -fs -X POST -H "Content-Type: application/octet-stream" --data-binary "@ci/bytecode" "http://detector:8001/update/policy"
           env DETECTOR_IP=$(dig detector +short) prove -r t/
