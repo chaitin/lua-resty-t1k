@@ -21,6 +21,7 @@ __DATA__
             local b = buffer:new()
             b:add("hello")
             b:add(" ", "world", "!")
+            ngx.say(b[1], b[2], b[3], b[4])
             ngx.say(b:len())
         }
     }
@@ -42,15 +43,14 @@ hello world!
             local buffer = require "resty.t1k.buffer"
             local b = buffer:new()
             b:add_crlf()
-            ngx.say(b:tostring() == "\x0d\x0a")
-            ngx.say("b:len(): ", b:len())
+            b:add_crlf()
+            ngx.print(b[1], b[2])
         }
     }
 --- request
 GET /t
---- response_body
-true
-b:len(): 2
+--- response_body eval
+"\r\n\r\n"
 --- no_error_log
 [error]
 
@@ -64,17 +64,14 @@ b:len(): 2
             local buffer = require "resty.t1k.buffer"
             local b = buffer:new()
             b:add_kv_crlf("k1", "v1")
-            ngx.print(b:tostring())
-            ngx.say("b:len(): ", b:len())
+            ngx.print(b[1], b[2], b[3], b[4])
             b:add_kv_crlf("k2", "v2")
-            ngx.print(b:tostring())
-            ngx.print("b:len(): ", b:len())
+            ngx.print(b[5], b[6], b[7], b[8])
         }
     }
 --- request
 GET /t
 --- response_body eval
-"k1: v1\r\nb:len(): 8
-k1: v1\r\nk2: v2\r\nb:len(): 16"
+"k1: v1\r\nk2: v2\r\n"
 --- no_error_log
 [error]

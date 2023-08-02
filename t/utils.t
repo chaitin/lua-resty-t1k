@@ -262,27 +262,3 @@ GET /t
 nil
 --- no_error_log
 [error]
-
-
-
-=== TEST 11: array_len
---- http_config eval: $::HttpConfig
---- config
-    location /t {
-        content_by_lua_block {
-            local utils = require "resty.t1k.utils"
-            ngx.say(utils.array_len(nil))
-            ngx.say(utils.array_len({}))
-            ngx.say(utils.array_len({"\r\n"}))
-            ngx.say(utils.array_len({"Hello", " " , "World", "!"}))
-        }
-    }
---- request
-GET /t
---- response_body
-0
-0
-2
-12
---- no_error_log
-[error]

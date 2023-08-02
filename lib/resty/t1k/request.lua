@@ -41,31 +41,34 @@ local KEY_EXTRA_HAS_RSP_IF_BLOCK = "HasRspIfBlock"
 local TAG_HEAD_WITH_MASK_FIRST = bor(consts.TAG_HEAD, consts.MASK_FIRST)
 local TAG_EXTRA_WITH_MASK_LAST = bor(consts.TAG_EXTRA, consts.MASK_LAST)
 
-local T1K_PROTO_VERSION = "Proto:2\n"
-local T1K_PROTO_VERSION_DATA = fmt("%s%s%s", char(consts.TAG_VERSION), utils.int_to_char_length(#T1K_PROTO_VERSION), T1K_PROTO_VERSION)
+local T1K_PROTO = "Proto:2\n"
+local T1K_PROTO_DATA = fmt("%s%s%s", char(consts.TAG_VERSION), utils.int_to_char_length(#T1K_PROTO), T1K_PROTO)
 
-local function read_request_body(req_body_size_opt)
+local function read_request_body(opt_req_body_size)
     local ok, err
+    local req_body, req_body_size
 
     ngx_req.read_body()
-    local req_body = ngx_req.get_body_data()
-    if not req_body then
-        local path = ngx_req.get_body_file()
-        if not path then
-            return true, nil, nil
+    req_body = ngx_req.get_body_data()
+    if req_body then
+        req_body_size = #req_body
+        if req_body_size > opt_req_body_size then
+            nlog(debug_fmt("request body is too long: %d bytes, cut to %d bytes", req_body_size, opt_req_body_size))
+            req_body = sub(req_body, 1, opt_req_body_size)
         end
 
-        ok, err, req_body = file.read(path)
-        if not ok then
-            err = fmt("failed to read temporary file %s: %s", path, err)
-            return ok, err, nil
-        end
+        return true, nil, req_body
     end
 
-    local req_body_size = #req_body
-    if req_body_size > req_body_size_opt then
-        nlog(debug_fmt("request body is too long: %d bytes, cut to %d bytes", req_body_size, req_body_size_opt))
-        req_body = sub(req_body, 1, req_body_size_opt)
+    local path = ngx_req.get_body_file()
+    if not path then
+        return true, nil, nil
+    end
+
+    ok, err, req_body = file.read(path, opt_req_body_size)
+    if not ok then
+        err = fmt("failed to read temporary file %s: %s", path, err)
+        return ok, err, nil
     end
 
     return true, nil, req_body
@@ -142,7 +145,7 @@ local function build_extra(opts)
         return nil, err, nil
     end
 
-    local extra = {
+    local extra = buffer:new({
         KEY_EXTRA_UUID, ":", uuid.generate_v4(), "\n",
         KEY_EXTRA_REMOTE_ADDR, ":", src_ip, "\n",
         KEY_EXTRA_REMOTE_PORT, ":", src_port, "\n",
@@ -154,39 +157,17 @@ local function build_extra(opts)
         KEY_EXTRA_REQ_BEGIN_TIME, ":", fmt("%.0f", ngx_req.start_time() * 1000000), "\n",
         KEY_EXTRA_HAS_RSP_IF_OK, ":n\n",
         KEY_EXTRA_HAS_RSP_IF_BLOCK, ":n\n"
-    }
+    })
 
     return true, nil, extra
 end
 
-local function send_header(sock, header)
-    local ok, err = sock:send({ char(TAG_HEAD_WITH_MASK_FIRST), utils.int_to_char_length(header:len()) })
+local function do_send(sock, first, second)
+    local ok, err = sock:send(first)
     if not ok then
         return ok, err
     end
-    ok, err = sock:send(header)
-    if not ok then
-        return ok, err
-    end
-
-    return true, nil
-end
-
-local function send_body(sock, body)
-    local ok, err = sock:send({ char(consts.TAG_BODY), utils.int_to_char_length(body:len()), body })
-    if not ok then
-        return ok, err
-    end
-
-    return true, nil
-end
-
-local function send_extra(sock, extra)
-    local ok, err = sock:send({ T1K_PROTO_VERSION_DATA, char(TAG_EXTRA_WITH_MASK_LAST), utils.int_to_char_length(utils.array_len(extra)) })
-    if not ok then
-        return ok, err
-    end
-    ok, err = sock:send(extra)
+    ok, err = sock:send(second)
     if not ok then
         return ok, err
     end
@@ -262,7 +243,7 @@ local function do_socket(opts, header, body, extra)
 
     sock:settimeouts(opts.connect_timeout, opts.send_timeout, opts.read_timeout)
 
-    ok, err = send_header(sock, header)
+    ok, err = do_send(sock, { char(TAG_HEAD_WITH_MASK_FIRST), utils.int_to_char_length(header:len()) }, header)
     if not ok then
         sock:close()
         err = fmt("failed to send header data to t1k server %s: %s", server, err)
@@ -270,7 +251,7 @@ local function do_socket(opts, header, body, extra)
     end
 
     if body ~= nil then
-        ok, err = send_body(sock, body)
+        ok, err = do_send(sock, { char(consts.TAG_BODY), utils.int_to_char_length(body:len()) }, body)
         if not ok then
             sock:close()
             err = fmt("failed to send body data to t1k server %s: %s", server, err)
@@ -278,7 +259,7 @@ local function do_socket(opts, header, body, extra)
         end
     end
 
-    ok, err = send_extra(sock, extra)
+    ok, err = do_send(sock, { T1K_PROTO_DATA, char(TAG_EXTRA_WITH_MASK_LAST), utils.int_to_char_length(extra:len()) }, extra)
     if not ok then
         sock:close()
         err = fmt("failed to send extra data to t1k server %s: %s", server, err)
@@ -309,12 +290,12 @@ function _M.do_request(opts)
     end
 
     ok, err, body = build_body(opts)
-    if not body then
+    if not ok then
         return ok, err, nil
     end
 
     ok, err, extra = build_extra(opts)
-    if not extra then
+    if not ok then
         return ok, err, nil
     end
 

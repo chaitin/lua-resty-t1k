@@ -118,15 +118,4 @@ function _M.get_event_id(str)
     return nil
 end
 
-function _M.array_len(t)
-    local len = 0
-    if not t then
-        return len
-    end
-    for _, v in ipairs(t) do
-        len = len + #v
-    end
-    return len
-end
-
 return _M
