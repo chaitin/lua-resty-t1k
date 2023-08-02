@@ -21,6 +21,7 @@ local ngx = ngx
 local nlog = ngx.log
 local ngx_var = ngx.var
 local ngx_req = ngx.req
+local ngx_socket = ngx.socket
 
 local warn_fmt = log.warn_fmt
 local debug_fmt = log.debug_fmt
@@ -37,10 +38,11 @@ local KEY_EXTRA_REQ_BEGIN_TIME = "ReqBeginTime"
 local KEY_EXTRA_HAS_RSP_IF_OK = "HasRspIfOK"
 local KEY_EXTRA_HAS_RSP_IF_BLOCK = "HasRspIfBlock"
 
-local T1K_PROTO_VERSION = "Proto:2\n"
-
 local TAG_HEAD_WITH_MASK_FIRST = bor(consts.TAG_HEAD, consts.MASK_FIRST)
 local TAG_EXTRA_WITH_MASK_LAST = bor(consts.TAG_EXTRA, consts.MASK_LAST)
+
+local T1K_PROTO_VERSION = "Proto:2\n"
+local T1K_PROTO_VERSION_DATA = fmt("%s%s%s", char(consts.TAG_VERSION), utils.int_to_char_length(#T1K_PROTO_VERSION), T1K_PROTO_VERSION)
 
 local function read_request_body(req_body_size_opt)
     local ok, err
@@ -77,12 +79,48 @@ local function get_remote_addr(remote_addr_var, remote_addr_idx)
     return addr or ngx_var.remote_addr
 end
 
-local function build_extra_buf(remote_addr_var, remote_addr_idx)
+local function build_header()
+    if ngx_req.http_version() < 2 then
+        -- HTTP/2 or plus not yet supported
+        return true, nil, ngx_req.raw_header()
+    end
+
+    local headers, err = ngx_req.get_headers(0, true)
+    if err then
+        err = fmt("failed to call ngx_req.get_headers: %s", err)
+        return nil, err, nil
+    end
+
+    local buf = buffer:new()
+    buf:add(fmt("%s %s HTTP/%.1f\r\n", ngx_req.get_method(), ngx_var.request_uri, ngx_req.http_version()))
+
+    for k, v in pairs(headers) do
+        buf:add_kv_crlf(k, v)
+    end
+    buf:add_crlf()
+
+    return true, nil, buf
+end
+
+local function build_body(opts)
+    local ok, err
+    local body
+
+    local req_body_size = opts.req_body_size * 1024
+    ok, err, body = read_request_body(req_body_size)
+    if not ok then
+        return ok, err, nil
+    end
+
+    return true, nil, body
+end
+
+local function build_extra(opts)
     local err
 
-    local src_ip = get_remote_addr(remote_addr_var, remote_addr_idx)
+    local src_ip = get_remote_addr(opts.remote_addr_var, opts.remote_addr_idx)
     if not src_ip then
-        err = fmt("failed to get remote_addr, var: %s, idx %d", remote_addr_var, remote_addr_idx)
+        err = fmt("failed to get remote_addr, var: %s, idx %d", opts.remote_addr_var, opts.remote_addr_idx)
         return nil, err
     end
 
@@ -104,66 +142,56 @@ local function build_extra_buf(remote_addr_var, remote_addr_idx)
         return nil, err, nil
     end
 
-    local buf = buffer:new()
-    buf:add_kv_lf(KEY_EXTRA_UUID, uuid.generate_v4())
-    buf:add_kv_lf(KEY_EXTRA_REMOTE_ADDR, src_ip)
-    buf:add_kv_lf(KEY_EXTRA_REMOTE_PORT, src_port)
-    buf:add_kv_lf(KEY_EXTRA_LOCAL_ADDR, local_ip)
-    buf:add_kv_lf(KEY_EXTRA_LOCAL_PORT, local_port)
-    buf:add_kv_lf(KEY_EXTRA_SCHEME, ngx_var.scheme)
-    buf:add_kv_lf(KEY_EXTRA_SERVER_NAME, ngx_var.server_name)
-    buf:add_kv_lf(KEY_EXTRA_PROXY_NAME, ngx_var.hostname)
-    buf:add_kv_lf(KEY_EXTRA_REQ_BEGIN_TIME, fmt("%.0f", ngx_req.start_time() * 1000000))
-    buf:add_kv_lf(KEY_EXTRA_HAS_RSP_IF_OK, "n")
-    buf:add_kv_lf(KEY_EXTRA_HAS_RSP_IF_BLOCK, "n")
+    local extra = {
+        KEY_EXTRA_UUID, ":", uuid.generate_v4(), "\n",
+        KEY_EXTRA_REMOTE_ADDR, ":", src_ip, "\n",
+        KEY_EXTRA_REMOTE_PORT, ":", src_port, "\n",
+        KEY_EXTRA_LOCAL_ADDR, ":", local_ip, "\n",
+        KEY_EXTRA_LOCAL_PORT, ":", local_port, "\n",
+        KEY_EXTRA_SCHEME, ":", ngx_var.scheme, "\n",
+        KEY_EXTRA_SERVER_NAME, ":", ngx_var.server_name, "\n",
+        KEY_EXTRA_PROXY_NAME, ":", ngx_var.hostname, "\n",
+        KEY_EXTRA_REQ_BEGIN_TIME, ":", fmt("%.0f", ngx_req.start_time() * 1000000), "\n",
+        KEY_EXTRA_HAS_RSP_IF_OK, ":n\n",
+        KEY_EXTRA_HAS_RSP_IF_BLOCK, ":n\n"
+    }
 
-    return true, nil, buf
+    return true, nil, extra
 end
 
-local function build_header_buffer()
-    local headers, err = ngx_req.get_headers(0, true)
-    if err then
-        err = fmt("failed to call ngx_req.get_headers: %s", err)
-        return nil, err, nil
+local function send_header(sock, header)
+    local ok, err = sock:send({ char(TAG_HEAD_WITH_MASK_FIRST), utils.int_to_char_length(header:len()) })
+    if not ok then
+        return ok, err
+    end
+    ok, err = sock:send(header)
+    if not ok then
+        return ok, err
     end
 
-    local buf = buffer:new()
-    buf:add(fmt("%s %s HTTP/%.1f", ngx_req.get_method(), ngx_var.request_uri, ngx_req.http_version()))
-    buf:add_crlf()
-
-    for k, v in pairs(headers) do
-        buf:add_kv_crlf(k, v)
-    end
-    buf:add_crlf()
-
-    return true, nil, buf
+    return true, nil
 end
 
-local function build_payload_buffer(opts)
-    local ok, err
-    local body, extra, extra_buf
-    local buf = buffer:new()
-
-    local req_body_size = opts.req_body_size * 1024
-    ok, err, body = read_request_body(req_body_size)
+local function send_body(sock, body)
+    local ok, err = sock:send({ char(consts.TAG_BODY), utils.int_to_char_length(body:len()), body })
     if not ok then
-        return ok, err, nil
+        return ok, err
     end
 
-    if body ~= nil then
-        buf:add(char(consts.TAG_BODY), utils.int_to_char_length(#body), body)
-    end
+    return true, nil
+end
 
-    buf:add(char(consts.TAG_VERSION), utils.int_to_char_length(#T1K_PROTO_VERSION), T1K_PROTO_VERSION)
-
-    ok, err, extra_buf = build_extra_buf(opts.remote_addr_var, opts.remote_addr_idx)
+local function send_extra(sock, extra)
+    local ok, err = sock:send({ T1K_PROTO_VERSION_DATA, char(TAG_EXTRA_WITH_MASK_LAST), utils.int_to_char_length(utils.array_len(extra)) })
     if not ok then
-        return ok, err, nil
+        return ok, err
     end
-    extra = extra_buf:tostring()
-    buf:add(char(TAG_EXTRA_WITH_MASK_LAST), utils.int_to_char_length(#extra), extra)
+    ok, err = sock:send(extra)
+    if not ok then
+        return ok, err
+    end
 
-    return true, nil, buf
+    return true, nil
 end
 
 local function receive_data(s, srv)
@@ -208,25 +236,11 @@ local function receive_data(s, srv)
     return true, nil, t
 end
 
-local function send_header_buf(sock, header_buf)
-    local ok, err
-    ok, err = sock:send({ char(TAG_HEAD_WITH_MASK_FIRST), utils.int_to_char_length(header_buf:len()) })
-    if not ok then
-        return ok, err
-    end
-    ok, err = sock:send(header_buf)
-    if not ok then
-        return ok, err
-    end
-
-    return true, nil
-end
-
-local function do_socket(opts, header_buf, payload_buf)
+local function do_socket(opts, header, body, extra)
     local ok, err
     local t, sock, server
 
-    sock, err = ngx.socket.tcp()
+    sock, err = ngx_socket.tcp()
     if not sock then
         err = fmt("failed to create socket: %s", err)
         return nil, err, nil
@@ -248,17 +262,26 @@ local function do_socket(opts, header_buf, payload_buf)
 
     sock:settimeouts(opts.connect_timeout, opts.send_timeout, opts.read_timeout)
 
-    ok, err = send_header_buf(sock, header_buf)
+    ok, err = send_header(sock, header)
     if not ok then
         sock:close()
         err = fmt("failed to send header data to t1k server %s: %s", server, err)
         return ok, err, nil
     end
 
-    ok, err = sock:send(payload_buf)
+    if body ~= nil then
+        ok, err = send_body(sock, body)
+        if not ok then
+            sock:close()
+            err = fmt("failed to send body data to t1k server %s: %s", server, err)
+            return ok, err, nil
+        end
+    end
+
+    ok, err = send_extra(sock, extra)
     if not ok then
         sock:close()
-        err = fmt("failed to send payload data to t1k server %s: %s", server, err)
+        err = fmt("failed to send extra data to t1k server %s: %s", server, err)
         return ok, err, nil
     end
 
@@ -278,19 +301,24 @@ end
 
 function _M.do_request(opts)
     local ok, err
-    local header_buf, payload_buf, t
+    local header, body, extra, t
 
-    ok, err, header_buf = build_header_buffer(opts)
+    ok, err, header = build_header(opts)
     if not ok then
         return ok, err, nil
     end
 
-    ok, err, payload_buf = build_payload_buffer(opts)
-    if not payload_buf then
+    ok, err, body = build_body(opts)
+    if not body then
         return ok, err, nil
     end
 
-    ok, err, t = do_socket(opts, header_buf, payload_buf)
+    ok, err, extra = build_extra(opts)
+    if not extra then
+        return ok, err, nil
+    end
+
+    ok, err, t = do_socket(opts, header, body, extra)
     if not ok then
         return ok, err, nil
     end
