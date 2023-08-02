@@ -7,9 +7,7 @@ local _M = {
 local buffer_size = 2 ^ 13
 
 function _M.read(p, size)
-    if not size or size < 0 then
-        size = 0
-    end
+    size = (not size or size < 0) and 0 or size
 
     local f, err = io.open(p, "rb")
     if not f or err then
