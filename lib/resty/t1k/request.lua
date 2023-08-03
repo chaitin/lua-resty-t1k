@@ -21,6 +21,7 @@ local ngx = ngx
 local nlog = ngx.log
 local ngx_var = ngx.var
 local ngx_req = ngx.req
+local ngx_socket = ngx.socket
 
 local warn_fmt = log.warn_fmt
 local debug_fmt = log.debug_fmt
@@ -37,33 +38,43 @@ local KEY_EXTRA_REQ_BEGIN_TIME = "ReqBeginTime"
 local KEY_EXTRA_HAS_RSP_IF_OK = "HasRspIfOK"
 local KEY_EXTRA_HAS_RSP_IF_BLOCK = "HasRspIfBlock"
 
-local T1K_PROTO_VERSION = "Proto:2\n"
-
 local TAG_HEAD_WITH_MASK_FIRST = bor(consts.TAG_HEAD, consts.MASK_FIRST)
 local TAG_EXTRA_WITH_MASK_LAST = bor(consts.TAG_EXTRA, consts.MASK_LAST)
 
-local function read_request_body(req_body_size_opt)
+local T1K_PROTO = "Proto:2\n"
+local T1K_PROTO_DATA = fmt("%s%s%s", char(consts.TAG_VERSION), utils.int_to_char_length(#T1K_PROTO), T1K_PROTO)
+
+local function read_request_body(opt_req_body_size)
     local ok, err
+    local req_body, req_body_size
 
-    ngx_req.read_body()
-    local req_body = ngx_req.get_body_data()
-    if not req_body then
-        local path = ngx_req.get_body_file()
-        if not path then
-            return true, nil, nil
-        end
-
-        ok, err, req_body = file.read(path)
-        if not ok then
-            err = fmt("failed to read temporary file %s: %s", path, err)
-            return ok, err, nil
-        end
+    local content_length = tonumber(ngx_var.http_content_length) or 0
+    local transfer_encoding = ngx_var.http_transfer_encoding
+    if content_length == 0 and not transfer_encoding then
+        return true, nil, nil
     end
 
-    local req_body_size = #req_body
-    if req_body_size > req_body_size_opt then
-        nlog(debug_fmt("request body is too long: %d bytes, cut to %d bytes", req_body_size, req_body_size_opt))
-        req_body = sub(req_body, 1, req_body_size_opt)
+    ngx_req.read_body()
+    req_body = ngx_req.get_body_data()
+    if req_body then
+        req_body_size = #req_body
+        if req_body_size > opt_req_body_size then
+            nlog(debug_fmt("request body is too long: %d bytes, cut to %d bytes", req_body_size, opt_req_body_size))
+            req_body = sub(req_body, 1, opt_req_body_size)
+        end
+
+        return true, nil, req_body
+    end
+
+    local path = ngx_req.get_body_file()
+    if not path then
+        return true, nil, nil
+    end
+
+    ok, err, req_body = file.read(path, opt_req_body_size)
+    if not ok then
+        err = fmt("failed to read temporary file %s: %s", path, err)
+        return ok, err, nil
     end
 
     return true, nil, req_body
@@ -77,12 +88,48 @@ local function get_remote_addr(remote_addr_var, remote_addr_idx)
     return addr or ngx_var.remote_addr
 end
 
-local function build_extra_buf(remote_addr_var, remote_addr_idx)
+local function build_header()
+    local http_version = ngx_req.http_version()
+    if http_version < 2.0 then
+        return true, nil, ngx_req.raw_header()
+    end
+
+    local headers, err = ngx_req.get_headers(0, true)
+    if err then
+        err = fmt("failed to call ngx_req.get_headers: %s", err)
+        return nil, err, nil
+    end
+
+    local buf = buffer:new()
+    buf:add(fmt("%s %s HTTP/%.1f\r\n", ngx_req.get_method(), ngx_var.request_uri, http_version))
+
+    for k, v in pairs(headers) do
+        buf:add_kv_crlf(k, v)
+    end
+    buf:add_crlf()
+
+    return true, nil, buf
+end
+
+local function build_body(opts)
+    local ok, err
+    local body
+
+    local req_body_size = opts.req_body_size * 1024
+    ok, err, body = read_request_body(req_body_size)
+    if not ok then
+        return ok, err, nil
+    end
+
+    return true, nil, body
+end
+
+local function build_extra(opts)
     local err
 
-    local src_ip = get_remote_addr(remote_addr_var, remote_addr_idx)
+    local src_ip = get_remote_addr(opts.remote_addr_var, opts.remote_addr_idx)
     if not src_ip then
-        err = fmt("failed to get remote_addr, var: %s, idx %d", remote_addr_var, remote_addr_idx)
+        err = fmt("failed to get remote_addr, var: %s, idx %d", opts.remote_addr_var, opts.remote_addr_idx)
         return nil, err
     end
 
@@ -104,66 +151,34 @@ local function build_extra_buf(remote_addr_var, remote_addr_idx)
         return nil, err, nil
     end
 
-    local buf = buffer:new()
-    buf:add_kv_lf(KEY_EXTRA_UUID, uuid.generate_v4())
-    buf:add_kv_lf(KEY_EXTRA_REMOTE_ADDR, src_ip)
-    buf:add_kv_lf(KEY_EXTRA_REMOTE_PORT, src_port)
-    buf:add_kv_lf(KEY_EXTRA_LOCAL_ADDR, local_ip)
-    buf:add_kv_lf(KEY_EXTRA_LOCAL_PORT, local_port)
-    buf:add_kv_lf(KEY_EXTRA_SCHEME, ngx_var.scheme)
-    buf:add_kv_lf(KEY_EXTRA_SERVER_NAME, ngx_var.server_name)
-    buf:add_kv_lf(KEY_EXTRA_PROXY_NAME, ngx_var.hostname)
-    buf:add_kv_lf(KEY_EXTRA_REQ_BEGIN_TIME, fmt("%.0f", ngx_req.start_time() * 1000000))
-    buf:add_kv_lf(KEY_EXTRA_HAS_RSP_IF_OK, "n")
-    buf:add_kv_lf(KEY_EXTRA_HAS_RSP_IF_BLOCK, "n")
+    local extra = buffer:new({
+        KEY_EXTRA_UUID, ":", uuid.generate_v4(), "\n",
+        KEY_EXTRA_REMOTE_ADDR, ":", src_ip, "\n",
+        KEY_EXTRA_REMOTE_PORT, ":", src_port, "\n",
+        KEY_EXTRA_LOCAL_ADDR, ":", local_ip, "\n",
+        KEY_EXTRA_LOCAL_PORT, ":", local_port, "\n",
+        KEY_EXTRA_SCHEME, ":", ngx_var.scheme, "\n",
+        KEY_EXTRA_SERVER_NAME, ":", ngx_var.server_name, "\n",
+        KEY_EXTRA_PROXY_NAME, ":", ngx_var.hostname, "\n",
+        KEY_EXTRA_REQ_BEGIN_TIME, ":", fmt("%.0f", ngx_req.start_time() * 1000000), "\n",
+        KEY_EXTRA_HAS_RSP_IF_OK, ":n\n",
+        KEY_EXTRA_HAS_RSP_IF_BLOCK, ":n\n"
+    })
 
-    return true, nil, buf
+    return true, nil, extra
 end
 
-local function build_header_buffer()
-    local headers, err = ngx_req.get_headers(0, true)
-    if err then
-        err = fmt("failed to call ngx_req.get_headers: %s", err)
-        return nil, err, nil
-    end
-
-    local buf = buffer:new()
-    buf:add(fmt("%s %s HTTP/%.1f", ngx_req.get_method(), ngx_var.request_uri, ngx_req.http_version()))
-    buf:add_crlf()
-
-    for k, v in pairs(headers) do
-        buf:add_kv_crlf(k, v)
-    end
-    buf:add_crlf()
-
-    return true, nil, buf
-end
-
-local function build_payload_buffer(opts)
-    local ok, err
-    local body, extra, extra_buf
-    local buf = buffer:new()
-
-    local req_body_size = opts.req_body_size * 1024
-    ok, err, body = read_request_body(req_body_size)
+local function do_send(sock, first, second)
+    local ok, err = sock:send(first)
     if not ok then
-        return ok, err, nil
+        return ok, err
     end
-
-    if body ~= nil then
-        buf:add(char(consts.TAG_BODY), utils.int_to_char_length(#body), body)
-    end
-
-    buf:add(char(consts.TAG_VERSION), utils.int_to_char_length(#T1K_PROTO_VERSION), T1K_PROTO_VERSION)
-
-    ok, err, extra_buf = build_extra_buf(opts.remote_addr_var, opts.remote_addr_idx)
+    ok, err = sock:send(second)
     if not ok then
-        return ok, err, nil
+        return ok, err
     end
-    extra = extra_buf:tostring()
-    buf:add(char(TAG_EXTRA_WITH_MASK_LAST), utils.int_to_char_length(#extra), extra)
 
-    return true, nil, buf
+    return true, nil
 end
 
 local function receive_data(s, srv)
@@ -208,28 +223,14 @@ local function receive_data(s, srv)
     return true, nil, t
 end
 
-local function send_header_buf(sock, header_buf)
+local function get_socket(opts)
     local ok, err
-    ok, err = sock:send({ char(TAG_HEAD_WITH_MASK_FIRST), utils.int_to_char_length(header_buf:len()) })
-    if not ok then
-        return ok, err
-    end
-    ok, err = sock:send(header_buf)
-    if not ok then
-        return ok, err
-    end
+    local count, sock, server
 
-    return true, nil
-end
-
-local function do_socket(opts, header_buf, payload_buf)
-    local ok, err
-    local t, sock, server
-
-    sock, err = ngx.socket.tcp()
+    sock, err = ngx_socket.tcp()
     if not sock then
         err = fmt("failed to create socket: %s", err)
-        return nil, err, nil
+        return nil, err, nil, nil
     end
 
     if opts.uds then
@@ -242,23 +243,65 @@ local function do_socket(opts, header_buf, payload_buf)
     if not ok then
         sock:close()
         err = fmt("failed to connect to t1k server %s: %s", server, err)
-        return ok, err, nil
+        return ok, err, nil, nil
     end
     nlog(debug_fmt("successfully connected to t1k server %s", server))
 
     sock:settimeouts(opts.connect_timeout, opts.send_timeout, opts.read_timeout)
 
-    ok, err = send_header_buf(sock, header_buf)
+    count, err = sock:getreusedtimes()
+    if not count then
+        nlog(warn_fmt("failed to get reused times from t1k server %s: %s", server, err))
+    end
+
+    if count == 0 then
+        ok, err = sock:setoption("keepalive", true)
+        if not ok then
+            nlog(warn_fmt("failed to set keepalive for t1k server %s: %s", server, err))
+        end
+        ok, err = sock:setoption("reuseaddr", true)
+        if not ok then
+            nlog(warn_fmt("failed to set reuseaddr for t1k server %s: %s", server, err))
+        end
+        ok, err = sock:setoption("tcp-nodelay", true)
+        if not ok then
+            nlog(warn_fmt("failed to set tcp-nodelay for t1k server %s: %s", server, err))
+        end
+    end
+
+    return true, nil, sock, server
+end
+
+local function do_socket(opts, header, body, extra)
+    local ok, err
+    local t, sock, server
+
+    ok, err, sock, server = get_socket(opts)
+    if not ok then
+        err = fmt("failed to get socket: %s", err)
+        return ok, err, nil
+    end
+
+    ok, err = do_send(sock, { char(TAG_HEAD_WITH_MASK_FIRST), utils.int_to_char_length(header:len()) }, header)
     if not ok then
         sock:close()
         err = fmt("failed to send header data to t1k server %s: %s", server, err)
         return ok, err, nil
     end
 
-    ok, err = sock:send(payload_buf)
+    if body ~= nil then
+        ok, err = do_send(sock, { char(consts.TAG_BODY), utils.int_to_char_length(body:len()) }, body)
+        if not ok then
+            sock:close()
+            err = fmt("failed to send body data to t1k server %s: %s", server, err)
+            return ok, err, nil
+        end
+    end
+
+    ok, err = do_send(sock, { T1K_PROTO_DATA, char(TAG_EXTRA_WITH_MASK_LAST), utils.int_to_char_length(extra:len()) }, extra)
     if not ok then
         sock:close()
-        err = fmt("failed to send payload data to t1k server %s: %s", server, err)
+        err = fmt("failed to send extra data to t1k server %s: %s", server, err)
         return ok, err, nil
     end
 
@@ -278,19 +321,24 @@ end
 
 function _M.do_request(opts)
     local ok, err
-    local header_buf, payload_buf, t
+    local header, body, extra, t
 
-    ok, err, header_buf = build_header_buffer(opts)
+    ok, err, header = build_header(opts)
     if not ok then
         return ok, err, nil
     end
 
-    ok, err, payload_buf = build_payload_buffer(opts)
-    if not payload_buf then
+    ok, err, body = build_body(opts)
+    if not ok then
         return ok, err, nil
     end
 
-    ok, err, t = do_socket(opts, header_buf, payload_buf)
+    ok, err, extra = build_extra(opts)
+    if not ok then
+        return ok, err, nil
+    end
+
+    ok, err, t = do_socket(opts, header, body, extra)
     if not ok then
         return ok, err, nil
     end

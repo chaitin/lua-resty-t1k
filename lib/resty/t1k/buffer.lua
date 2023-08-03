@@ -2,19 +2,11 @@ local _M = {
     _VERSION = '1.0.0',
 }
 
-function _M:new ()
-    local o = {}
+function _M:new (o)
+    o = o or {}
     setmetatable(o, self)
     self.__index = self
     return o
-end
-
-function _M:add_lf ()
-    self:add("\x0a")
-end
-
-function _M:add_crlf ()
-    self:add("\x0d\x0a")
 end
 
 function _M:add (...)
@@ -23,26 +15,20 @@ function _M:add (...)
     end
 end
 
-function _M:add_kv_lf (k, v)
-    self:add(k, ":", v)
-    self:add_lf()
+function _M:add_crlf ()
+    self:add("\r\n")
 end
 
 function _M:add_kv_crlf (k, v)
-    self:add(k, ": ", v)
-    self:add_crlf()
-end
-
-function _M:tostring (sep, i, j)
-    return table.concat(self, sep, i, j)
+    self:add(k, ": ", v, "\r\n")
 end
 
 function _M:len()
-    local l = 0
+    local len = 0
     for _, v in ipairs(self) do
-        l = l + #v
+        len = len + #v
     end
-    return l
+    return len
 end
 
 return _M
