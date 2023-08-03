@@ -227,7 +227,7 @@ local function get_socket(opts)
     local ok, err
     local count, sock, server
 
-    sock = ngx_socket.tcp()
+    sock, err = ngx_socket.tcp()
     if not sock then
         err = fmt("failed to create socket: %s", err)
         return nil, err, nil, nil
