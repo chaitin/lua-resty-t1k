@@ -48,6 +48,12 @@ local function read_request_body(opt_req_body_size)
     local ok, err
     local req_body, req_body_size
 
+    local content_length = tonumber(ngx_var.http_content_length) or 0
+    local transfer_encoding = ngx_var.http_transfer_encoding
+    if content_length == 0 and not transfer_encoding then
+        return true, nil, nil
+    end
+
     ngx_req.read_body()
     req_body = ngx_req.get_body_data()
     if req_body then
@@ -83,8 +89,8 @@ local function get_remote_addr(remote_addr_var, remote_addr_idx)
 end
 
 local function build_header()
-    if ngx_req.http_version() < 2 then
-        -- HTTP/2 or plus not yet supported
+    local http_version = ngx_req.http_version()
+    if http_version < 2.0 then
         return true, nil, ngx_req.raw_header()
     end
 
@@ -95,7 +101,7 @@ local function build_header()
     end
 
     local buf = buffer:new()
-    buf:add(fmt("%s %s HTTP/%.1f\r\n", ngx_req.get_method(), ngx_var.request_uri, ngx_req.http_version()))
+    buf:add(fmt("%s %s HTTP/%.1f\r\n", ngx_req.get_method(), ngx_var.request_uri, http_version))
 
     for k, v in pairs(headers) do
         buf:add_kv_crlf(k, v)
@@ -217,14 +223,14 @@ local function receive_data(s, srv)
     return true, nil, t
 end
 
-local function do_socket(opts, header, body, extra)
+local function get_socket(opts)
     local ok, err
-    local t, sock, server
+    local count, sock, server
 
-    sock, err = ngx_socket.tcp()
+    sock = ngx_socket.tcp()
     if not sock then
         err = fmt("failed to create socket: %s", err)
-        return nil, err, nil
+        return nil, err, nil, nil
     end
 
     if opts.uds then
@@ -237,11 +243,44 @@ local function do_socket(opts, header, body, extra)
     if not ok then
         sock:close()
         err = fmt("failed to connect to t1k server %s: %s", server, err)
-        return ok, err, nil
+        return ok, err, nil, nil
     end
     nlog(debug_fmt("successfully connected to t1k server %s", server))
 
     sock:settimeouts(opts.connect_timeout, opts.send_timeout, opts.read_timeout)
+
+    count, err = sock:getreusedtimes()
+    if not count then
+        nlog(warn_fmt("failed to get reused times from t1k server %s: %s", server, err))
+    end
+
+    if count == 0 then
+        ok, err = sock:setoption("keepalive", true)
+        if not ok then
+            nlog(warn_fmt("failed to set keepalive for t1k server %s: %s", server, err))
+        end
+        ok, err = sock:setoption("reuseaddr", true)
+        if not ok then
+            nlog(warn_fmt("failed to set reuseaddr for t1k server %s: %s", server, err))
+        end
+        ok, err = sock:setoption("tcp-nodelay", true)
+        if not ok then
+            nlog(warn_fmt("failed to set tcp-nodelay for t1k server %s: %s", server, err))
+        end
+    end
+
+    return true, nil, sock, server
+end
+
+local function do_socket(opts, header, body, extra)
+    local ok, err
+    local t, sock, server
+
+    ok, err, sock, server = get_socket(opts)
+    if not ok then
+        err = fmt("failed to get socket: %s", err)
+        return ok, err, nil
+    end
 
     ok, err = do_send(sock, { char(TAG_HEAD_WITH_MASK_FIRST), utils.int_to_char_length(header:len()) }, header)
     if not ok then
