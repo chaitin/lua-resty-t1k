@@ -310,7 +310,7 @@ local function do_socket(opts, header, body, extra)
         return ok, err, nil
     end
 
-    ok, err = sock:setkeepalive(opts.keepalive_timeout, opts.keepalive)
+    ok, err = sock:setkeepalive(opts.keepalive_timeout, opts.keepalive_size)
     if not ok then
         nlog(warn_fmt("failed to set keepalive: %s", err))
         sock:close()
