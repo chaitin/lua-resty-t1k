@@ -1,5 +1,5 @@
 package = "lua-resty-t1k-main"
-version = "main-0"
+version = "0-0"
 source = {
     url = "git://github.com/chaitin/lua-resty-t1k",
     branch = "main",
