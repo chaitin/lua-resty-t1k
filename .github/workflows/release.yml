@@ -30,7 +30,7 @@ jobs:
           if [[ $title =~ $re ]]; then
               v=v${BASH_REMATCH[1]}
               echo "##[set-output name=version;]${v}"
-              echo "##[set-output name=version_withou_v;]${BASH_REMATCH[1]}"
+              echo "##[set-output name=version_without_v;]${BASH_REMATCH[1]}"
           else
               echo "commit format is not correct"
               exit 1
@@ -51,4 +51,4 @@ jobs:
           LUAROCKS_TOKEN: ${{ secrets.LUAROCKS_TOKEN }}
         run: |
           luarocks install dkjson
-          luarocks upload rockspec/lua-resty-t1k-${{ steps.release_env.outputs.version_withou_v }}-0.rockspec --api-key=${{ secrets.LUAROCKS_API_KEY }}
+          luarocks upload rockspec/lua-resty-t1k-${{ steps.release_env.outputs.version_without_v }}-0.rockspec --api-key=${{ secrets.LUAROCKS_API_KEY }}
