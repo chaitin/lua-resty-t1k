@@ -233,6 +233,8 @@ local function get_socket(opts)
         return nil, err, nil, nil
     end
 
+    sock:settimeouts(opts.connect_timeout, opts.send_timeout, opts.read_timeout)
+
     if opts.uds then
         server = opts.host
         ok, err = sock:connect(opts.host)
@@ -246,8 +248,6 @@ local function get_socket(opts)
         return ok, err, nil, nil
     end
     nlog(debug_fmt("successfully connected to t1k server %s", server))
-
-    sock:settimeouts(opts.connect_timeout, opts.send_timeout, opts.read_timeout)
 
     count, err = sock:getreusedtimes()
     if not count then
