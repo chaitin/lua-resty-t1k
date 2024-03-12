@@ -104,9 +104,9 @@ local function build_header()
     buf:add(fmt("%s %s HTTP/%.1f\r\n", ngx_req.get_method(), ngx_var.request_uri, http_version))
 
     for k, v in pairs(headers) do
-        buf:add_kv_crlf(k, v)
+        buf:add(k .. ": " .. v .. "\r\n")
     end
-    buf:add_crlf()
+    buf:add("\r\n")
 
     return true, nil, buf
 end
