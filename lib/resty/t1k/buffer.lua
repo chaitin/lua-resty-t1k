@@ -2,11 +2,10 @@ local _M = {
     _VERSION = '1.0.0',
 }
 
-local metatable = { __index = _M }
-
 function _M:new(o)
     o = o or {}
-    setmetatable(o, metatable)
+    setmetatable(o, self)
+    self.__index = self
     return o
 end
 
