@@ -6,7 +6,7 @@ jobs:
   luacheck:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: leafo/gh-actions-lua@v10
         with:
           luaVersion: "luajit-openresty"
@@ -53,7 +53,7 @@ jobs:
       - name: Install Test::Nginx
         run: cpanm -q -n Test::Nginx
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           lfs: true
 
