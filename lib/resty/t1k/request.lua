@@ -101,18 +101,10 @@ local function build_header()
     end
 
     local buf = buffer:new()
-    buf:add(fmt("%s %s HTTP/%.1f\r\n", ngx_req.get_method(), ngx_var.request_uri, http_version))
     buf:add(ngx_req.get_method())
     buf:add(" ")
     buf:add(ngx_var.request_uri)
-    buf:add(" ")
-    if http_version == 2.0 then
-        buf:add("HTTP/2.0")
-    else
-        buf:add("HTTP/")
-        buf:add(tostring(http_version))
-    end
-    buf:add("\r\n")
+    buf:add(fmt(" HTTP/%.1f\r\n", http_version))
 
     for k, v in pairs(headers) do
         buf:add(k .. ": " .. v .. "\r\n")
