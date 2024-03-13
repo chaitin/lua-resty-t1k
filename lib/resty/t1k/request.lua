@@ -106,7 +106,7 @@ local function build_header()
     buf:add(" ")
     buf:add(ngx_var.request_uri)
     buf:add(" ")
-    if http_version = 2.0 then
+    if http_version == 2.0 then
         buf:add("HTTP/2.0")
     else
         buf:add("HTTP/")
