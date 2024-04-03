@@ -61,10 +61,10 @@ jobs:
         id: test
         run: |
           curl -fs -X POST -H "Content-Type: application/octet-stream" --data-binary "@ci/bytecode" "http://detector:8001/update/policy"
-          env DETECTOR_IP=$(dig detector +short) prove -r t/; cat t/servroot/logs/error.log
+          env DETECTOR_IP=$(dig detector +short) prove -r t/
 
       - name: Upload failed test logs
-        if: ${{ steps.test.outcome == 'failure' }}
+        if: ${{ steps.test.outcome != 'success' }}
         uses: actions/upload-artifact@v4
         with:
           name: test-logs
