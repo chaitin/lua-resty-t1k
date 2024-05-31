@@ -2,10 +2,8 @@ name: Release
 
 on:
   push:
-    branches:
-      - "main"
-    paths:
-      - 'rockspec/**'
+    tags:
+      - "v*"
 
 jobs:
   release:
@@ -21,28 +19,22 @@ jobs:
       - name: Install Luarocks
         uses: leafo/gh-actions-luarocks@v4
 
-      - name: Extract release name
-        id: release_env
-        shell: bash
+      - name: Extract release tag
+        id: release_tag
         run: |
-          title="${{ github.event.head_commit.message }}"
-          re="^feat: release v*(\S+)"
-          if [[ $title =~ $re ]]; then
-              v=v${BASH_REMATCH[1]}
-              echo "##[set-output name=version;]${v}"
-              echo "##[set-output name=version_without_v;]${BASH_REMATCH[1]}"
-          else
-              echo "commit format is not correct"
-              exit 1
-          fi
+          # Extract the tag name from the ref
+          tag="${GITHUB_REF#refs/tags/}"
+          version_without_v="${tag#v}"
+          echo "version=${tag}" >> $GITHUB_ENV
+          echo "version_without_v=${version_without_v}" >> $GITHUB_ENV
 
       - name: Create Release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.release_env.outputs.version }}
-          release_name: ${{ steps.release_env.outputs.version }}
+          tag_name: ${{ env.version }}
+          release_name: ${{ env.version }}
           draft: false
           prerelease: false
 
@@ -51,4 +43,4 @@ jobs:
           LUAROCKS_TOKEN: ${{ secrets.LUAROCKS_TOKEN }}
         run: |
           luarocks install dkjson
-          luarocks upload rockspec/lua-resty-t1k-${{ steps.release_env.outputs.version_without_v }}-0.rockspec --api-key=${{ secrets.LUAROCKS_API_KEY }}
+          luarocks upload rockspec/lua-resty-t1k-${{ env.version_without_v }}-0.rockspec --api-key=${{ secrets.LUAROCKS_API_KEY }}
