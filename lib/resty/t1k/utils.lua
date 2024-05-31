@@ -11,10 +11,12 @@ local rshift = bit.rshift
 
 local abs = math.abs
 local char = string.char
-local gsub = string.gsub
 
-local re_match = ngx.re.match
-local re_gmatch = ngx.re.gmatch
+local ngx = ngx
+local ngx_re = ngx.re
+local re_match = ngx_re.match
+local re_gmatch = ngx_re.gmatch
+local re_gsub = ngx_re.gsub
 
 local NOT_MASK_FIRST = bnot(consts.MASK_FIRST)
 local NOT_MASK_LAST = bnot(consts.MASK_LAST)
@@ -67,7 +69,7 @@ function _M.to_var_idx(o)
         idx = tonumber(o:sub(p + 1))
     end
 
-    var = gsub(var:lower(), "-", "_")
+    var = re_gsub(var:lower(), "-", "_")
     if not _M.starts_with(var, consts.NGX_HTTP_HEADER_PREFIX) then
         var = consts.NGX_HTTP_HEADER_PREFIX .. var
     end

@@ -5,6 +5,8 @@ local _M = {
 local find = string.find
 local sub = string.sub
 
+local ngx = ngx
+
 local function parse_extra_header(extra_header)
     local t = {}
     local idx = 1

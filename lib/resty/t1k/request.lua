@@ -14,14 +14,14 @@ local _M = {
 local bor = bit.bor
 local byte = string.byte
 local char = string.char
-local sub = string.sub
 local fmt = string.format
+local sub = string.sub
 
 local ngx = ngx
 local nlog = ngx.log
-local ngx_var = ngx.var
 local ngx_req = ngx.req
 local ngx_socket = ngx.socket
+local ngx_var = ngx.var
 
 local warn_fmt = log.warn_fmt
 local debug_fmt = log.debug_fmt
@@ -171,16 +171,11 @@ local function build_extra(opts)
     return true, nil, extra
 end
 
-local function do_send(sock, first, second)
-    local ok, err = sock:send(first)
+local function do_send(sock, data)
+    local ok, err = sock:send(data)
     if not ok then
         return ok, err
     end
-    ok, err = sock:send(second)
-    if not ok then
-        return ok, err
-    end
-
     return true, nil
 end
 
@@ -285,7 +280,7 @@ local function do_socket(opts, header, body, extra)
         return ok, err, nil
     end
 
-    ok, err = do_send(sock, { char(TAG_HEAD_WITH_MASK_FIRST), utils.int_to_char_length(header:len()) }, header)
+    ok, err = do_send(sock, { char(TAG_HEAD_WITH_MASK_FIRST), utils.int_to_char_length(header:len()), header })
     if not ok then
         sock:close()
         err = fmt("failed to send header data to t1k server %s: %s", server, err)
@@ -293,7 +288,7 @@ local function do_socket(opts, header, body, extra)
     end
 
     if body ~= nil then
-        ok, err = do_send(sock, { char(consts.TAG_BODY), utils.int_to_char_length(body:len()) }, body)
+        ok, err = do_send(sock, { char(consts.TAG_BODY), utils.int_to_char_length(body:len()), body })
         if not ok then
             sock:close()
             err = fmt("failed to send body data to t1k server %s: %s", server, err)
@@ -301,7 +296,7 @@ local function do_socket(opts, header, body, extra)
         end
     end
 
-    ok, err = do_send(sock, { T1K_PROTO_DATA, char(TAG_EXTRA_WITH_MASK_LAST), utils.int_to_char_length(extra:len()) }, extra)
+    ok, err = do_send(sock, { T1K_PROTO_DATA, char(TAG_EXTRA_WITH_MASK_LAST), utils.int_to_char_length(extra:len()), extra })
     if not ok then
         sock:close()
         err = fmt("failed to send extra data to t1k server %s: %s", server, err)
