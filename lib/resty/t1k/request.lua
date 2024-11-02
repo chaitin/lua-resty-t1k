@@ -98,7 +98,7 @@ end
 
 local function build_header()
     local http_version = ngx_req.http_version()
-    if http_version < 2.0 then
+    if not http_version or http_version < 2.0 then
         return true, nil, ngx_req.raw_header()
     end
 
