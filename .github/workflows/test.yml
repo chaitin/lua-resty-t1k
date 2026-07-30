@@ -6,7 +6,7 @@ jobs:
   luacheck:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: leafo/gh-actions-lua@v13
         with:
           luaVersion: "luajit-openresty"
@@ -42,7 +42,7 @@ jobs:
         run: curl -fsSL https://raw.githubusercontent.com/miyagawa/cpanminus/master/cpanm > /bin/cpanm && chmod +x /bin/cpanm
 
       - name: Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v6
         with:
           path: |
             ~/.cpan
@@ -52,7 +52,7 @@ jobs:
       - name: Install Test::Nginx
         run: cpanm -q -n Test::Nginx
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           lfs: true
 
