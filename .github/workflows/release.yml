@@ -14,10 +14,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Lua
-        uses: leafo/gh-actions-lua@v10
+        uses: leafo/gh-actions-lua@v13
 
       - name: Install Luarocks
-        uses: leafo/gh-actions-luarocks@v4
+        uses: leafo/gh-actions-luarocks@v6
 
       - name: Extract release tag
         id: release_tag

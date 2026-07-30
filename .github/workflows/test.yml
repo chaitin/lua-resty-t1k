@@ -7,10 +7,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: leafo/gh-actions-lua@v10
+      - uses: leafo/gh-actions-lua@v13
         with:
           luaVersion: "luajit-openresty"
-      - uses: leafo/gh-actions-luarocks@v4
+      - uses: leafo/gh-actions-luarocks@v6
       - run: luarocks install luacheck
       - run: luacheck lib
 
@@ -18,10 +18,9 @@ jobs:
     strategy:
       matrix:
         openresty_version:
-          - 1.17.8.2
-          - 1.19.9.1
-          - 1.21.4.3
-          - 1.25.3.1
+          - 1.25.3.2
+          - 1.27.1.2
+          - 1.29.2.5
 
     services:
       detector:
@@ -40,7 +39,7 @@ jobs:
           ln -s /usr/bin/bsdtar /usr/bin/tar
 
       - name: Install CPAN
-        run: curl -s -L http://xrl.us/cpanm > /bin/cpanm && chmod +x /bin/cpanm
+        run: curl -fsSL https://raw.githubusercontent.com/miyagawa/cpanminus/master/cpanm > /bin/cpanm && chmod +x /bin/cpanm
 
       - name: Cache
         uses: actions/cache@v3
