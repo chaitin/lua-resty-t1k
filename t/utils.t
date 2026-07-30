@@ -12,27 +12,27 @@ run_tests();
 
 __DATA__
 
-=== TEST 1: int_to_char_length
+=== TEST 1: item_to_char_length
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
         content_by_lua_block {
             local utils = require "resty.t1k.utils"
-            ngx.say("255 to char length: ", utils.int_to_char_length(255))
-            ngx.print("16777216 to char length: ", utils.int_to_char_length(16777216))
+            ngx.say("\"hello world\" to char length: ", utils.item_to_char_length("hello world"))
+            ngx.say("{\"hello\", \" \", \"world\"} to char length: ", utils.item_to_char_length({"hello", " ", "world"}))
         }
     }
 --- request
 GET /t
 --- response_body eval
-"255 to char length: \x{ff}\x{00}\x{00}\x{00}
-16777216 to char length: \x{00}\x{00}\x{00}\x{01}"
+"\"hello world\" to char length: \x{0b}\x{00}\x{00}\x{00}
+{\"hello\", \" \", \"world\"} to char length: \x{0b}\x{00}\x{00}\x{00}\x{0a}"
 --- no_error_log
 [error]
 
 
 
-=== TEST 2: int_to_char_length
+=== TEST 2: char_to_int_length
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
@@ -260,5 +260,55 @@ GET /t
 0988987de04844c7a3ce6d27865c9513
 8bae6adf33864c7f8bf715a9b7a65b2c
 nil
+--- no_error_log
+[error]
+
+
+
+=== TEST 11: parse_header_value
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local utils = require "resty.t1k.utils"
+            local fmt = string.format
+            ngx.say(utils.parse_header_value(nil))
+            ngx.say(utils.parse_header_value("a"))
+            ngx.say(utils.parse_header_value({"a", "b"}))
+        }
+    }
+--- request
+GET /t
+--- response_body
+nil
+a
+a, b
+--- no_error_log
+[error]
+
+
+
+=== TEST 12: get_ignored_content_types
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local utils = require "resty.t1k.utils"
+            local types = utils.get_ignored_content_types("text/html,application/json,  application/xml ,  text/plain ")
+            ngx.say("text/html: ", types["text/html"] and "true" or "false")
+            ngx.say("application/json: ", types["application/json"] and "true" or "false")
+            ngx.say("application/xml: ", types["application/xml"] and "true" or "false")
+            ngx.say("text/plain: ", types["text/plain"] and "true" or "false")
+            ngx.say("image/png: ", types["image/png"] and "true" or "false")
+        }
+    }
+--- request
+GET /t
+--- response_body
+text/html: true
+application/json: true
+application/xml: true
+text/plain: true
+image/png: false
 --- no_error_log
 [error]

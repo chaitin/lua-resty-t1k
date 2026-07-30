@@ -18,19 +18,17 @@ __DATA__
     location /t {
         content_by_lua_block {
             local buffer = require "resty.t1k.buffer"
-            local b = buffer:new()
-            b:add("hello")
-            b:add(" ")
-            b:add("world")
-            b:add("!")
-            ngx.say(b[1], b[2], b[3], b[4])
+            local b = buffer:new({"Hello", " "})
+            b:add("World")
+            b:add("!", "!", "!")
+            ngx.say(b:tostring())
             ngx.say(b:len())
         }
     }
 --- request
 GET /t
 --- response_body
-hello world!
-12
+Hello World!!!
+14
 --- no_error_log
 [error]

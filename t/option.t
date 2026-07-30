@@ -6,13 +6,13 @@ _EOC_
 
 repeat_each(3);
 
-plan tests => repeat_each() * (blocks() * 3 + 1);
+plan tests => repeat_each() * (blocks() * 3 + 2);
 
 run_tests();
 
 __DATA__
 
-=== TEST 1: do_access nil option
+=== TEST 1: option nil option
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
@@ -31,7 +31,7 @@ __DATA__
         }
     }
 --- request
-GET /t/shell.php
+GET /t
 --- response_body
 passed
 --- no_error_log
@@ -40,7 +40,7 @@ passed
 
 
 
-=== TEST 2: do_access disabled
+=== TEST 2: option disabled
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
@@ -63,7 +63,7 @@ passed
         }
     }
 --- request
-GET /t/shell.php
+GET /t
 --- response_body
 passed
 --- no_error_log
@@ -74,7 +74,7 @@ lua-resty-t1k: t1k is not enabled
 
 
 
-=== TEST 3: do_access invalid mode
+=== TEST 3: option invalid mode
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
@@ -97,7 +97,7 @@ lua-resty-t1k: t1k is not enabled
         }
     }
 --- request
-GET /t/shell.php
+GET /t
 --- response_body
 passed
 --- error_log
@@ -105,7 +105,7 @@ lua-resty-t1k: invalid t1k mode: invalid
 
 
 
-=== TEST 4: do_access invalid host
+=== TEST 4: option invalid host
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
@@ -137,7 +137,7 @@ lua-resty-t1k: invalid t1k host: nil
 
 
 
-=== TEST 5: do_access invalid port
+=== TEST 5: option invalid port
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
@@ -167,3 +167,52 @@ passed
 --- error_log
 lua-resty-t1k: invalid t1k port: nil
 --- log_level: debug
+
+
+
+=== TEST 6: option invalid resp_body_size
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        access_by_lua_block {
+            local t1k = require "resty.t1k"
+
+            local t = {
+                mode = "block",
+                host = "127.0.0.1",
+                port = 18000,
+                log_resp = true,
+                resp_body_size = "invalid",
+            }
+
+            local ok, err, _ = t1k.do_access(t)
+            if not ok then
+                ngx.log(ngx.ERR, err)
+            end
+
+            t = {
+                mode = "block",
+                host = "127.0.0.1",
+                port = 18000,
+                log_resp = true,
+                resp_body_size = -1,
+            }
+
+            local ok, err, _ = t1k.do_access(t)
+            if not ok then
+                ngx.log(ngx.ERR, err)
+            end
+        }
+
+        content_by_lua_block {
+            ngx.say("passed")
+        }
+    }
+--- request
+GET /t
+--- response_body
+passed
+--- error_log
+lua-resty-t1k: invalid t1k response body logging size: invalid
+lua-resty-t1k: t1k response body logging size cannot be negative: -1
+--- log_level: warn

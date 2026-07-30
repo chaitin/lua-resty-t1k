@@ -635,11 +635,11 @@ skip blocking
             ngx.say("passed")
         }
     }
+--- request
+GET /t/shell.php
 --- tcp_listen: 18000
 --- tcp_reply eval
 "\x41\x01\x00\x00\x00?\x02\x03\x00\x00\x00405\x23\x12\x00\x00\x00k1:v1\x0ak2:v2\x0ak3:v3\x0a\xa4\x33\x00\x00\x00<!-- event_id: c0c039a7c348486eaffd9e2f9846b66b -->"
---- request
-GET /t/shell.php
 --- response_headers
 k1: v1
 k2: v2
@@ -692,11 +692,11 @@ lua-resty-t1k: successfully connected to t1k server 127.0.0.1:18000
             ngx.say("passed")
         }
     }
+--- request
+GET /t/shell.php
 --- tcp_listen: 18000
 --- tcp_reply eval
 "\x41\x01\x00\x00\x00?\x02\x03\x00\x00\x00405\x23\x12\x00\x00\x00k1:v1\x0ak2:v2\x0ak3:v3\x0a\xa4\x33\x00\x00\x00<!-- event_id: c0c039a7c348486eaffd9e2f9846b66b -->"
---- request
-GET /t/shell.php
 --- response_headers
 k1: v1
 k2: v2
@@ -760,11 +760,11 @@ lua-resty-t1k: successfully connected to t1k server 127.0.0.1:18000
             ngx.say("passed")
         }
     }
+--- request
+GET /t/shell.php
 --- tcp_listen: t1k.sock
 --- tcp_reply eval
 "\x41\x01\x00\x00\x00?\x02\x03\x00\x00\x00405\x23\x12\x00\x00\x00k1:v1\x0ak2:v2\x0ak3:v3\x0a\xa4\x33\x00\x00\x00<!-- event_id: c0c039a7c348486eaffd9e2f9846b66b -->"
---- request
-GET /t/shell.php
 --- response_headers
 k1: v1
 k2: v2
@@ -829,11 +829,11 @@ lua-resty-t1k: successfully connected to t1k server unix:t1k.sock
             ngx.say("passed")
         }
     }
+--- request
+GET /t
 --- tcp_listen: 18000
 --- tcp_reply eval
 "\x41\x01\x00\x00\x00.\xa3\x12\x00\x00\x00k1:v1\x0ak2:v2\x0ak3:v3\x0a"
---- request
-GET /t
 --- response_headers
 k1: v1
 k2: v2
@@ -882,11 +882,11 @@ lua-resty-t1k: successfully connected to t1k server 127.0.0.1:18000
             ngx.say("passed")
         }
     }
+--- request
+GET /t
 --- tcp_listen: 18000
 --- tcp_reply eval
 "\x41\x01\x00\x00\x00.\xa3\x12\x00\x00\x00k1:v1\x0ak2:v2\x0ak3:v3\x0a"
---- request
-GET /t
 --- response_headers
 k1: v1
 k2: v2
@@ -946,11 +946,11 @@ lua-resty-t1k: successfully connected to t1k server 127.0.0.1:18000
             ngx.say("passed")
         }
     }
+--- request
+GET /t
 --- tcp_listen: t1k.sock
 --- tcp_reply eval
 "\x41\x01\x00\x00\x00.\xa3\x12\x00\x00\x00k1:v1\x0ak2:v2\x0ak3:v3\x0a"
---- request
-GET /t
 --- response_headers
 k1: v1
 k2: v2
@@ -1011,11 +1011,11 @@ lua-resty-t1k: successfully connected to t1k server unix:t1k.sock
             ngx.say("passed")
         }
     }
+--- request
+GET /t/shell.php
 --- tcp_listen: 18000
 --- tcp_reply eval
 "\x41\x01\x00\x00\x00?\x02\x03\x00\x00\x00405\x23\x12\x00\x00\x00k1:v1\x0ak2:v2\x0ak3:v3\x0a\xa4\x33\x00\x00\x00<!-- event_id: c0c039a7c348486eaffd9e2f9846b66b -->"
---- request
-GET /t/shell.php
 --- raw_response_headers_unlike eval
 '.*k1: v1\r\n.*'
 --- response_body
@@ -1063,11 +1063,11 @@ skip blocking
             ngx.say("passed")
         }
     }
+--- request
+GET /t/shell.php
 --- tcp_listen: 18000
 --- tcp_reply eval
 "\x41\x01\x00\x00\x00?\x02\x03\x00\x00\x00405\x23\x12\x00\x00\x00k1:v1\x0ak2:v2\x0ak3:v3\x0a\xa4\x33\x00\x00\x00<!-- event_id: c0c039a7c348486eaffd9e2f9846b66b -->"
---- request
-GET /t/shell.php
 --- raw_response_headers_unlike eval
 '.*k1: v1\r\n.*'
 --- response_body
@@ -1125,11 +1125,11 @@ lua-resty-t1k: successfully connected to t1k server 127.0.0.1:18000
             ngx.say("passed")
         }
     }
+--- request
+GET /t/shell.php
 --- tcp_listen: t1k.sock
 --- tcp_reply eval
 "\x41\x01\x00\x00\x00?\x02\x03\x00\x00\x00405\x23\x12\x00\x00\x00k1:v1\x0ak2:v2\x0ak3:v3\x0a\xa4\x33\x00\x00\x00<!-- event_id: c0c039a7c348486eaffd9e2f9846b66b -->"
---- request
-GET /t/shell.php
 --- raw_response_headers_unlike eval
 '.*k1: v1\r\n.*'
 --- response_body

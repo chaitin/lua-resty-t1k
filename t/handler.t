@@ -62,8 +62,8 @@ passed
         }
 
         header_filter_by_lua_block {
-            local filter = require "resty.t1k.filter"
-            filter.do_header_filter()
+            local header = require "resty.t1k.header"
+            header.do_header_filter()
         }
 
         content_by_lua_block {

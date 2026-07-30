@@ -44,6 +44,9 @@ location / {
             keepalive_size = 256,                      -- maximum concurrent idle connections to the SafeLine WAF detection service, integer, default 256
             keepalive_timeout = 60000,                 -- idle connection timeout, in milliseconds, integer, default 60s (60000ms)
             remote_addr = "http_x_forwarded_for: 1",   -- remote address from ngx.var.VARIABLE, string, default from ngx.var.remote_addr
+            log_resp = false,                          -- report the response to the SafeLine WAF detection service, boolean, default false
+            resp_body_size = 4,                        -- response body size to report, in KB, integer, default 4KB, only used when log_resp is true
+            extra_ignored_content_types = "text/csv",  -- extra response content types to skip, comma separated, string, only used when log_resp is true
         }
 
         local ok, err, _ = t1k.do_access(t, true)
@@ -56,8 +59,29 @@ location / {
         local t1k = require "resty.t1k"
         t1k.do_header_filter()
     }
+
+    -- the following two blocks are only required when log_resp is true
+    body_filter_by_lua_block {
+        local t1k = require "resty.t1k"
+        t1k.do_body_filter()
+    }
+
+    log_by_lua_block {
+        local t1k = require "resty.t1k"
+        t1k.do_log()
+    }
 }
 ```
+
+### Response Logging
+
+When `log_resp` is enabled, the response status line, headers, and up to `resp_body_size` KB of the response body are
+reported to the SafeLine WAF detection service after the request completes. The report is sent from a `ngx.timer`, so it
+does not add latency to the response itself.
+
+Responses are skipped when the request was already blocked, or when the response `Content-Type` matches a built-in
+ignored type (audio, video, font, image, and other binary media types). Use `extra_ignored_content_types` to skip
+additional content types.
 
 ## Lua Resty T1K vs. C T1K
 

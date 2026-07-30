@@ -11,6 +11,7 @@ local rshift = bit.rshift
 
 local abs = math.abs
 local char = string.char
+local concat = table.concat
 
 local ngx = ngx
 local ngx_re = ngx.re
@@ -21,9 +22,23 @@ local re_gsub = ngx_re.gsub
 local NOT_MASK_FIRST = bnot(consts.MASK_FIRST)
 local NOT_MASK_LAST = bnot(consts.MASK_LAST)
 
-function _M.int_to_char_length(x)
+local function int_to_char_length(x)
     return char(band(x, 0xff)) .. char(band(rshift(x, 8), 0xff)) ..
             char(band(rshift(x, 16), 0xff)) .. char(band(rshift(x, 24), 0xff))
+end
+
+function _M.item_to_char_length(x)
+    if type(x) == "string" then
+        return int_to_char_length(#x)
+    elseif type(x) == "table" then
+        local len = 0
+        for _, v in ipairs(x) do
+            len = len + #v
+        end
+        return int_to_char_length(len)
+    else
+        return int_to_char_length(0)
+    end
 end
 
 function _M.char_to_int_length(l)
@@ -118,6 +133,34 @@ function _M.get_event_id(str)
     end
 
     return nil
+end
+
+function _M.parse_header_value(v)
+    if type(v) == "table" then
+        return concat(v, ", ")
+    end
+    return tostring(v)
+end
+
+function _M.get_ignored_content_types(str)
+    if not str or str == "" then
+        return {}
+    end
+
+    local it, err = re_gmatch(str, [[([^,\s]+)]], "jo")
+    if err then
+        return nil, err
+    end
+
+    local t = {}
+    for m, e in it do
+        if e then
+            return nil, e
+        end
+        t[m[1]:lower()] = true
+    end
+
+    return t, nil
 end
 
 return _M
