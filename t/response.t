@@ -225,7 +225,7 @@ GET /t
 --- response_body
 ok
 --- error_log eval
-qr/lua-resty-t1k: failed to report response after [\d.]+ ms: failed to get socket: failed to connect to t1k server 127\.0\.0\.1:18001/
+qr/lua-resty-t1k: failed to report response: failed to get socket: failed to connect to t1k server 127\.0\.0\.1:18001/
 --- wait: 0.2
 --- log_level: error
 
@@ -265,13 +265,13 @@ GET /t
 --- response_body
 ok
 --- error_log eval
-qr/lua-resty-t1k: failed to report response after [\d.]+ ms: failed to receive info packet from t1k server 127\.0\.0\.1:18000/
+qr/lua-resty-t1k: failed to report response: failed to receive info packet from t1k server 127\.0\.0\.1:18000/
 --- log_level: error
 --- wait: 0.2
 
 
 
-=== TEST 9: do_response logs the elapsed time on success
+=== TEST 9: do_response logs a successful report
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
@@ -304,7 +304,7 @@ GET /t
 "\xc1\x00\x00\x00\x00"
 --- response_body
 ok
---- error_log eval
-qr/lua-resty-t1k: reported response in [\d.]+ ms/
+--- error_log
+lua-resty-t1k: reported response
 --- log_level: debug
 --- wait: 0.2

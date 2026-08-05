@@ -11,9 +11,7 @@ local _M = {
 local fmt = string.format
 
 local ngx = ngx
-local ngx_now = ngx.now
 local ngx_timer = ngx.timer
-local ngx_update_time = ngx.update_time
 local nlog = ngx.log
 
 local debug_fmt = log.debug_fmt
@@ -50,23 +48,15 @@ local function build_extra()
 end
 
 -- ngx.timer.at discards whatever the callback returns, so a failure inside
--- do_socket would otherwise be invisible. Wrap it to log the error and to
--- measure how long the report took.
+-- do_socket would otherwise be invisible. Wrap it to log the error.
 local function report(premature, opts, payload)
-    ngx_update_time()
-    local begin_time = ngx_now()
-
     local ok, err = socket.do_socket(premature, opts, payload, true)
-
-    ngx_update_time()
-    local elapsed = (ngx_now() - begin_time) * 1000
-
     if not ok then
-        nlog(err_fmt("failed to report response after %.3f ms: %s", elapsed, err))
+        nlog(err_fmt("failed to report response: %s", err))
         return
     end
 
-    nlog(debug_fmt("reported response in %.3f ms", elapsed))
+    nlog(debug_fmt("reported response"))
 end
 
 function _M.do_response()
