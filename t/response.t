@@ -38,12 +38,14 @@ __DATA__
 --- request
 GET /t
 --- tcp_listen: 18000
+--- tcp_query_auto_timeout: 0.1
 --- tcp_reply eval
 "\xc1\x00\x00\x00\x00"
 --- tcp_query eval
 qr/\x41\x06\x00\x00\x00header\x11.*HTTP\/1.1 200 OK.*\x12\x04\x00\x00\x00body\x25\x07\x00\x00\x00context\x13\x12\x00\x00\x00\x1d.*\xa0\x08\x00\x00\x00Proto:3\x0a/s
 --- no_error_log
 [error]
+--- wait: 0.2
 
 
 
@@ -72,12 +74,14 @@ qr/\x41\x06\x00\x00\x00header\x11.*HTTP\/1.1 200 OK.*\x12\x04\x00\x00\x00body\x2
 --- request
 GET /t
 --- tcp_listen: 18000
+--- tcp_query_auto_timeout: 0.1
 --- tcp_reply eval
 "\xc1\x00\x00\x00\x00"
 --- tcp_query eval
 qr/\x41\x06\x00\x00\x00header\x11.*HTTP\/1.1 200 OK.*\x25\x07\x00\x00\x00context\x13\x12\x00\x00\x00\x1d.*\xa0\x08\x00\x00\x00Proto:3\x0a/s
 --- no_error_log
 [error]
+--- wait: 0.2
 
 
 
@@ -106,12 +110,14 @@ qr/\x41\x06\x00\x00\x00header\x11.*HTTP\/1.1 200 OK.*\x25\x07\x00\x00\x00context
 --- request
 GET /t
 --- tcp_listen: 18000
+--- tcp_query_auto_timeout: 0.1
 --- tcp_reply eval
 "\xc1\x00\x00\x00\x00"
 --- tcp_query eval
 qr/\x41\x06\x00\x00\x00header\x11.*HTTP\/1.1 200 OK.*\x12\x04\x00\x00\x00body\x13\x12\x00\x00\x00\x1d.*\xa0\x08\x00\x00\x00Proto:3\x0a/s
 --- no_error_log
 [error]
+--- wait: 0.2
 
 
 
@@ -253,6 +259,7 @@ qr/lua-resty-t1k: failed to report response after [\d.]+ ms: failed to get socke
 --- request
 GET /t
 --- tcp_listen: 18000
+--- tcp_query_auto_timeout: 0.1
 --- tcp_reply eval
 "\x41"
 --- response_body
@@ -260,6 +267,7 @@ ok
 --- error_log eval
 qr/lua-resty-t1k: failed to report response after [\d.]+ ms: failed to receive info packet from t1k server 127\.0\.0\.1:18000/
 --- log_level: error
+--- wait: 0.2
 
 
 
@@ -291,6 +299,7 @@ qr/lua-resty-t1k: failed to report response after [\d.]+ ms: failed to receive i
 --- request
 GET /t
 --- tcp_listen: 18000
+--- tcp_query_auto_timeout: 0.1
 --- tcp_reply eval
 "\xc1\x00\x00\x00\x00"
 --- response_body
@@ -298,3 +307,4 @@ ok
 --- error_log eval
 qr/lua-resty-t1k: reported response in [\d.]+ ms/
 --- log_level: debug
+--- wait: 0.2
