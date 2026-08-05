@@ -44,6 +44,7 @@ __DATA__
 --- request
 GET /t
 --- tcp_listen: 18000
+--- tcp_query_auto_timeout: 0.1
 --- tcp_reply eval
 "\x41\x01\x00\x00\x00?\x02\x03\x00\x00\x00405\xa4\x33\x00\x00\x00<!-- event_id: c0c039a7c348486eaffd9e2f9846b66b -->"
 --- response_body
@@ -88,6 +89,7 @@ lua-resty-t1k: successfully connected to t1k server 127.0.0.1:18000
 --- request
 GET /t
 --- tcp_listen: 18000
+--- tcp_query_auto_timeout: 0.1
 --- tcp_reply eval
 "\xc1\x01\x00\x00\x00."
 --- response_body
@@ -131,6 +133,7 @@ lua-resty-t1k: successfully connected to t1k server 127.0.0.1:18000
 GET /t
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
 --- tcp_listen: 18000
+--- tcp_query_auto_timeout: 0.1
 --- tcp_reply eval
 "\xc1\x01\x00\x00\x00."
 --- response_body
@@ -174,6 +177,7 @@ lua-resty-t1k: successfully connected to t1k server 127.0.0.1:18000
 --- request
 GET /t
 --- tcp_listen: 18000
+--- tcp_query_auto_timeout: 0.1
 --- tcp_reply eval
 "\xc1\x01\x00\x00\x00~"
 --- response_body
@@ -246,6 +250,7 @@ ngx.var.http_non_existent_header or ngx.var.remote_addr is 127.0.0.1
 --- request
 GET /t
 --- tcp_listen: 18000
+--- tcp_query_auto_timeout: 0.1
 --- tcp_reply eval
 "\x41\x01\x00\x00\x00?\x02\x03\x00\x00\x00405\xa4\x33\x00\x00\x00<!-- event_id: c0c039a7c348486eaffd9e2f9846b66b -->"
 --- tcp_query eval
