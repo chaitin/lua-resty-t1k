@@ -11,10 +11,13 @@ local _M = {
 local fmt = string.format
 
 local ngx = ngx
+local ngx_now = ngx.now
 local ngx_timer = ngx.timer
+local ngx_update_time = ngx.update_time
 local nlog = ngx.log
 
 local debug_fmt = log.debug_fmt
+local err_fmt = log.err_fmt
 local warn_fmt = log.warn_fmt
 
 local function build_header()
@@ -44,6 +47,26 @@ local function build_extra()
     extra:add(consts.KEY_EXTRA_RESP_BEGIN_TIME, fmt("%.0f\n", ngx.ctx.t1k_resp_begin_time or ngx.now() * 1000000))
 
     return extra
+end
+
+-- ngx.timer.at discards whatever the callback returns, so a failure inside
+-- do_socket would otherwise be invisible. Wrap it to log the error and to
+-- measure how long the report took.
+local function report(premature, opts, payload)
+    ngx_update_time()
+    local begin_time = ngx_now()
+
+    local ok, err = socket.do_socket(premature, opts, payload, true)
+
+    ngx_update_time()
+    local elapsed = (ngx_now() - begin_time) * 1000
+
+    if not ok then
+        nlog(err_fmt("failed to report response after %.3f ms: %s", elapsed, err))
+        return
+    end
+
+    nlog(debug_fmt("reported response in %.3f ms", elapsed))
 end
 
 function _M.do_response()
@@ -86,9 +109,9 @@ function _M.do_response()
         { tag = consts.TAG_VERSION, data = consts.T1K_PROTO },
     }
 
-    ok, err = ngx_timer.at(0, socket.do_socket, opts, payload, true)
+    ok, err = ngx_timer.at(0, report, opts, payload)
     if not ok then
-        nlog(warn_fmt("failed to create timer to do response: %s", err))
+        nlog(err_fmt("failed to create timer to do response: %s", err))
         return
     end
 end

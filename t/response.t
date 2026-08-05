@@ -186,3 +186,115 @@ GET /t
 --- error_log
 lua-resty-t1k: missing extra data in context
 --- log_level: warn
+
+
+
+=== TEST 7: do_response logs a connect failure
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local buffer = require "resty.t1k.buffer"
+
+            ngx.ctx.t1k_opts = {
+                host = "127.0.0.1",
+                port = 18001,
+                log_resp = true,
+            }
+            ngx.ctx.t1k_req_header = "header"
+            ngx.ctx.t1k_resp_body = "body"
+            ngx.ctx.t1k_context = "context"
+            ngx.ctx.t1k_extra = buffer:new()
+
+            ngx.say("ok")
+        }
+
+        log_by_lua_block {
+            local response = require "resty.t1k.response"
+            response.do_response()
+        }
+    }
+--- request
+GET /t
+--- response_body
+ok
+--- error_log eval
+qr/lua-resty-t1k: failed to report response after [\d.]+ ms: failed to get socket: failed to connect to t1k server 127\.0\.0\.1:18001/
+--- wait: 0.2
+--- log_level: error
+
+
+
+=== TEST 8: do_response logs a receive failure
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local buffer = require "resty.t1k.buffer"
+
+            ngx.ctx.t1k_opts = {
+                host = "127.0.0.1",
+                port = 18000,
+                log_resp = true,
+            }
+            ngx.ctx.t1k_req_header = "header"
+            ngx.ctx.t1k_resp_body = "body"
+            ngx.ctx.t1k_context = "context"
+            ngx.ctx.t1k_extra = buffer:new()
+
+            ngx.say("ok")
+        }
+
+        log_by_lua_block {
+            local response = require "resty.t1k.response"
+            response.do_response()
+        }
+    }
+--- request
+GET /t
+--- tcp_listen: 18000
+--- tcp_reply eval
+"\x41"
+--- response_body
+ok
+--- error_log eval
+qr/lua-resty-t1k: failed to report response after [\d.]+ ms: failed to receive info packet from t1k server 127\.0\.0\.1:18000/
+--- log_level: error
+
+
+
+=== TEST 9: do_response logs the elapsed time on success
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local buffer = require "resty.t1k.buffer"
+
+            ngx.ctx.t1k_opts = {
+                host = "127.0.0.1",
+                port = 18000,
+                log_resp = true,
+            }
+            ngx.ctx.t1k_req_header = "header"
+            ngx.ctx.t1k_resp_body = "body"
+            ngx.ctx.t1k_context = "context"
+            ngx.ctx.t1k_extra = buffer:new()
+
+            ngx.say("ok")
+        }
+
+        log_by_lua_block {
+            local response = require "resty.t1k.response"
+            response.do_response()
+        }
+    }
+--- request
+GET /t
+--- tcp_listen: 18000
+--- tcp_reply eval
+"\xc1\x00\x00\x00\x00"
+--- response_body
+ok
+--- error_log eval
+qr/lua-resty-t1k: reported response in [\d.]+ ms/
+--- log_level: debug
